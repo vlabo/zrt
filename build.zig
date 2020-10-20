@@ -1,28 +1,57 @@
 const std = @import("std");
 const Builder = std.build.Builder;
+const LibExeObjStep = std.build.LibExeObjStep;
 const builtin = @import("builtin");
 const CrossTarget = std.zig.CrossTarget;
+const panic = std.debug.panic;
+
+const stdout = std.io.getStdOut().outStream();
 
 pub fn build(b: *Builder) !void {
+
+    const teensy = b.option(bool, "teensy", "Build for teensy 3.2") orelse true;
+
+    const firmware = b.addExecutable("firmware", "src/main.zig");
+    firmware.addBuildOption(bool, "teensy3_2", teensy);
+
+    if(teensy) {
+        try teensyBuild(b, firmware);
+    } else {
+        panic("Target not supported", .{});
+    }
+
+    b.default_step.dependOn(&firmware.step);
+}
+
+fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
+    try stdout.print("Building for teensy 3.2\n", .{});
+
+    const common_c_files = [_][]const u8 {
+        "./c_src/functions.c",
+        "./c_src/delay.c",
+        "./c_src/interrupt.c",
+        "./c_src/startup.c",
+        "./c_src/systick.c",
+        "./c_src/uart.c",
+        "./c_src/watchdog.c",
+    };
+
     const target = CrossTarget{
         .cpu_arch = .thumb,
         .os_tag = .freestanding,
         .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_m4 },
     };
 
-    const kernel = b.addExecutable("kernel", "src/main.zig");
-
     const lib_cflags = &[_][]const u8{"-Wall", "-Os", "-mthumb", "-ffunction-sections", "-fdata-sections", "-nostdlib"};
     for (common_c_files) |src_file| {
-        kernel.addCSourceFile(src_file, lib_cflags);
+        firmware.addCSourceFile(src_file, lib_cflags);
     }
-    kernel.addIncludeDir("./c_src");
+    firmware.addIncludeDir("./c_src");
 
-    kernel.setTarget(target);
-    kernel.setLinkerScriptPath("mk20dx256.ld");
-    kernel.setOutputDir("zig-cache");
-    kernel.setBuildMode(builtin.Mode.ReleaseSmall);
-    // kernel.installRaw("output.bin");
+    firmware.setTarget(target);
+    firmware.setLinkerScriptPath("src/teensy3_2/link/mk20dx256.ld");
+    firmware.setOutputDir("zig-cache");
+    firmware.setBuildMode(builtin.Mode.ReleaseSmall);
 
     const hex = b.step("hex", "Convert to hex");
     const upload = b.step("upload", "Upload");
@@ -36,11 +65,11 @@ pub fn build(b: *Builder) !void {
         ".eeprom",
         "-B",
         "arm",
-        kernel.getOutputPath(),
+        firmware.getOutputPath(),
         "output.hex",
     });
     const create_hex = b.addSystemCommand(objcopy_args.items);
-    create_hex.step.dependOn(&kernel.step);
+    create_hex.step.dependOn(&firmware.step);
     hex.dependOn(&create_hex.step);
 
     var teensy_upload_args = std.ArrayList([]const u8).init(b.allocator);
@@ -53,16 +82,4 @@ pub fn build(b: *Builder) !void {
     const teensy_upload = b.addSystemCommand(teensy_upload_args.items);
     teensy_upload.step.dependOn(&create_hex.step);
     upload.dependOn(&teensy_upload.step);
-
-    b.default_step.dependOn(&kernel.step);
 }
-
-const common_c_files = [_][]const u8 {
-    "./c_src/functions.c",
-    "./c_src/delay.c",
-    "./c_src/interrupt.c",
-    "./c_src/startup.c",
-    "./c_src/systick.c",
-    "./c_src/uart.c",
-    "./c_src/watchdog.c",
-};
