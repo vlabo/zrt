@@ -36,14 +36,15 @@ extern unsigned long _ebss;
 /*
  * Main function we will eventually call after startup
  */
-void main(void);
 
 
 /*
  * Initial program counter. The address where we want to start execution.
  * The actual function is implemented further down.
  */
-void __startup(void);
+void c_startup(void);
+
+extern void __startup(void);
 
 /*
  * Initial interrupt vector table, of which the first two entries are 
@@ -189,29 +190,29 @@ const uint8_t flashconfigbytes[16] = {
  * Optimize for space, since we are trying to squeeze in between
  * interrupt vectors and flashconfig.
  */
-__attribute__ ((section(".startup")))
-void __startup(void) {
+//__attribute__ ((section(".startup")))
+void c_startup(void) {
   // The CPU has a watchdog feature which is on by default,
   // so we have to configure it to not have nasty reset-surprises
   // later on.
-  startup_watchdog_hook();
+  // startup_watchdog_hook();
 
   // If the system was in VLLS mode, some peripherials and 
   // the I/O pins are in latched mode. We need to restore
   // config and can then acknowledge the isolation to get back
   // to normal. For now, we'll just ack TODO: properly do this
-  if (PMC_REGSC & PMC_REGSC_ACKISO_MASK) PMC_REGSC |= PMC_REGSC_ACKISO_MASK;
+  // if (PMC_REGSC & PMC_REGSC_ACKISO_MASK) PMC_REGSC |= PMC_REGSC_ACKISO_MASK;
 
   // There is a write-once-after-reset register that allows to
   // set which power states are available. Let's set it here.
-  SMC_PMPROT = ENABLED_POWER_MODES;
+  // SMC_PMPROT = ENABLED_POWER_MODES;
 
   // For the sake of simplicity, enable all GPIO port clocks
-  SIM_SCGC5 |= (  SIM_SCGC5_PORTA_MASK
-                | SIM_SCGC5_PORTB_MASK
-                | SIM_SCGC5_PORTC_MASK
-	        | SIM_SCGC5_PORTD_MASK
-	        | SIM_SCGC5_PORTE_MASK);
+  // SIM_SCGC5 |= (  SIM_SCGC5_PORTA_MASK
+  //               | SIM_SCGC5_PORTB_MASK
+  //               | SIM_SCGC5_PORTC_MASK
+	//         | SIM_SCGC5_PORTD_MASK
+	//         | SIM_SCGC5_PORTE_MASK);
 
   // ----------------------------------------------------------------------------------
   // Setup clocks
@@ -362,11 +363,11 @@ void __startup(void) {
 #endif
 
   // After everthing is done, call main
-  main(); 
+  //__startup();
 
   // This should be unreachable code as long as main() does not return.
   // To avoid running the instruction pointer into places it shouldn't go, 
   // loop forever
   // TODO: Going into sleep would maybe be a better solution
-  while (1);
+  //while (1);
 }

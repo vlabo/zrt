@@ -25,3 +25,17 @@ pub const uart = {
     }
 };
 
+pub const start = {
+    if(teensy3_2) {
+        return @import("teensy3_2/startup.zig");
+    } else {
+        return {};
+    }
+};
+
+const main = @import("main.zig");
+
+export fn __startup() linksection(".startup") noreturn {
+    start.setup();
+    main.main();
+}

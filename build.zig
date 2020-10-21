@@ -8,13 +8,12 @@ const panic = std.debug.panic;
 const stdout = std.io.getStdOut().outStream();
 
 pub fn build(b: *Builder) !void {
-
     const teensy = b.option(bool, "teensy", "Build for teensy 3.2") orelse true;
 
-    const firmware = b.addExecutable("firmware", "src/main.zig");
+    const firmware = b.addExecutable("firmware", "src/zrt.zig");
     firmware.addBuildOption(bool, "teensy3_2", teensy);
 
-    if(teensy) {
+    if (teensy) {
         try teensyBuild(b, firmware);
     } else {
         panic("Target not supported", .{});
@@ -26,7 +25,7 @@ pub fn build(b: *Builder) !void {
 fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     try stdout.print("Building for teensy 3.2\n", .{});
 
-    const common_c_files = [_][]const u8 {
+    const common_c_files = [_][]const u8{
         "./c_src/functions.c",
         "./c_src/delay.c",
         "./c_src/interrupt.c",
@@ -42,7 +41,7 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
         .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_m4 },
     };
 
-    const lib_cflags = &[_][]const u8{"-Wall", "-Os", "-mthumb", "-ffunction-sections", "-fdata-sections", "-nostdlib"};
+    const lib_cflags = &[_][]const u8{ "-Wall", "-Os", "-mthumb", "-ffunction-sections", "-fdata-sections", "-nostdlib" };
     for (common_c_files) |src_file| {
         firmware.addCSourceFile(src_file, lib_cflags);
     }
