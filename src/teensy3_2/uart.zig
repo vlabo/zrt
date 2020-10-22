@@ -1,4 +1,5 @@
 const cpu = @import("mk20dx256.zig");
+const io = @import("std").io;
 
 const UART_MemMap = struct {
     BDH: u8, // < UART Baud Rate Registers:High, offset: 0x0
@@ -45,36 +46,69 @@ var SIM_SCGC4 align(32) = @intToPtr(*volatile u32, cpu.SIM_SCGC4_ADDR);
 
 var BASE_UART0 = @intToPtr(*volatile UART_MemMap, cpu.UART0_BASE_ADDR);
 
-pub fn putchar(ch: u8) void {
-    // Wait until space is available
-    while ((BASE_UART0.S1 & cpu.UART_S1_TDRE_MASK) == 0) {}
+pub const Uart = struct {
 
-    // Write character
-    BASE_UART0.D = ch;
-}
+    const Self = @This();
 
-pub fn setup() void {
-    PIN0_PORT_PCR.* = cpu.port_pcr_mux(3);
-    PIN1_PORT_PCR.* = cpu.port_pcr_mux(3);
-    SIM_SCGC4.* |= cpu.SIM_SCGC4_UART0_MASK;
+    pub const Error = error{
+        failed_to_write,
+        failed_to_read,
+    };
 
-    // Set defaults (8bit no parity)
-    BASE_UART0.C1 = 0;
+    pub const OutStream = io.OutStream(Self, Error, Self.put_string);
 
-    // Set the baud rate. This has 3 components:
-    //  BDH = Contains interrupt enable bits and the high 5 bits of the divisor
-    //  BDL = Contains the low 8 bits of the divisor
-    //  C4_BRFA = The fine adjust value
-    //
-    //  tx baud = module clock / (16 * (divisor + BRFA/32))
-    const baud: comptime_int = 115200;
-    const divisor: comptime_int = 72000000 / (baud * 16);
-    const brfa: comptime_int = (2 * 72000000) / baud - divisor * 32;
+    pub fn new() Self {
+        Self.setup();
+        return Self{};
+    }
 
-    BASE_UART0.BDH = cpu.uart_bdh_sbr(divisor >> 8);
-    BASE_UART0.BDL = cpu.uart_bdl_sbr(divisor);
-    BASE_UART0.C4 = cpu.uart_c4_brfa(brfa);
+    pub fn setup() void {
+        PIN0_PORT_PCR.* = cpu.port_pcr_mux(3);
+        PIN1_PORT_PCR.* = cpu.port_pcr_mux(3);
+        SIM_SCGC4.* |= cpu.SIM_SCGC4_UART0_MASK;
 
-    // Enable Tx
-    BASE_UART0.C2 = cpu.UART_C2_TE_MASK;
-}
+        // Set defaults (8bit no parity)
+        BASE_UART0.C1 = 0;
+
+        // Set the baud rate. This has 3 components:
+        //  BDH = Contains interrupt enable bits and the high 5 bits of the divisor
+        //  BDL = Contains the low 8 bits of the divisor
+        //  C4_BRFA = The fine adjust value
+        //
+        //  tx baud = module clock / (16 * (divisor + BRFA/32))
+        const baud: comptime_int = 115200;
+        const divisor: comptime_int = 72000000 / (baud * 16);
+        const brfa: comptime_int = (2 * 72000000) / baud - divisor * 32;
+
+        BASE_UART0.BDH = cpu.uart_bdh_sbr(divisor >> 8);
+        BASE_UART0.BDL = cpu.uart_bdl_sbr(divisor);
+        BASE_UART0.C4 = cpu.uart_c4_brfa(brfa);
+
+        // Enable Tx
+        BASE_UART0.C2 = cpu.UART_C2_TE_MASK;
+    }
+
+    fn put_string(self: Self, string: []const u8) Error!usize {
+        for (string) |value| {
+            if (value == '\n') {
+                Self.put_char('\r');
+            }
+            Self.put_char(value);
+        }
+        return string.len;
+    }
+
+    fn put_char(ch: u8) void {
+        // Wait until space is available
+        while ((BASE_UART0.S1 & cpu.UART_S1_TDRE_MASK) == 0) {
+            cpu.nop();
+        }
+
+        // Write character
+        BASE_UART0.D = ch;
+    }
+
+    pub fn get_out_stream(self: Self) OutStream {
+        return OutStream{ .context = self };
+    }
+};

@@ -1,19 +1,23 @@
 const zrt = @import("zrt.zig");
 const gpio = zrt.gpio;
 const time = zrt.time;
-const uart = zrt.uart;
+const Uart = zrt.uart.Uart;
 
 pub fn main() noreturn {
-    uart.setup();
-    gpio.setOutput(5);
+    var uart = Uart.new();
+    var out = uart.get_out_stream();
+    var led = gpio.Output.new(5);
 
+    var i: u32 = 0;
     while (true) {
-        gpio.setHigh(5);
+        led.set_high();
         time.delay(300);
+        out.print("led is on:  {}\n", .{i}) catch {};
 
-        gpio.setLow(5);
+        led.set_low();
         time.delay(100);
+        out.print("led is off: {}\n", .{i}) catch {};
 
-        uart.putchar('a');
+        i += 1;
     }
 }
