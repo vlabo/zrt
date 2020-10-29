@@ -11,7 +11,7 @@ pub fn main() noreturn {
     var i: u32 = 0;
     while (true) {
         led.set_high();
-        time.delay(300);
+        time.delay(1000);
         out.print("led is on:  {}\n", .{i}) catch {};
 
         led.set_low();

@@ -47,7 +47,6 @@ var SIM_SCGC4 align(32) = @intToPtr(*volatile u32, cpu.SIM_SCGC4_ADDR);
 var BASE_UART0 = @intToPtr(*volatile UART_MemMap, cpu.UART0_BASE_ADDR);
 
 pub const Uart = struct {
-
     const Self = @This();
 
     pub const Error = error{
