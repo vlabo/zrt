@@ -1,3 +1,19 @@
+pub fn interrupt_enable() void {
+    asm volatile ("CPSIE i"
+        :
+        :
+        : "memory"
+    );
+}
+
+pub fn interrupt_disable() void {
+    asm volatile ("CPSID i"
+        :
+        :
+        : "memory"
+    );
+}
+
 pub export fn isr_panic() void {
     while (true) {}
 }

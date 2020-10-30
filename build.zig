@@ -25,27 +25,11 @@ pub fn build(b: *Builder) !void {
 fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     try stdout.print("Building for teensy 3.2\n", .{});
 
-    const common_c_files = [_][]const u8{
-        "./c_src/functions.c",
-        "./c_src/delay.c",
-        "./c_src/interrupt.c",
-        "./c_src/startup.c",
-        "./c_src/systick.c",
-        "./c_src/uart.c",
-        "./c_src/watchdog.c",
-    };
-
     const target = CrossTarget{
         .cpu_arch = .thumb,
         .os_tag = .freestanding,
         .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_m4 },
     };
-
-    const lib_cflags = &[_][]const u8{ "-Wall", "-Os", "-mthumb", "-ffunction-sections", "-fdata-sections", "-nostdlib" };
-    for (common_c_files) |src_file| {
-        firmware.addCSourceFile(src_file, lib_cflags);
-    }
-    firmware.addIncludeDir("./c_src");
 
     firmware.setTarget(target);
     firmware.setLinkerScriptPath("src/teensy3_2/link/mk20dx256.ld");

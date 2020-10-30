@@ -2,12 +2,32 @@ const watchdog = @import("watchdog.zig");
 const c = @cImport(@cInclude("startup.h"));
 const cpu = @import("mk20dx256.zig");
 const interrupt = @import("interrupt.zig");
+const config = @import("config.zig");
 
 var PMC_REGSC = @intToPtr(*volatile u8, cpu.PMC_REGSC_ADDR);
 var SIM_SCGC5 = @intToPtr(*volatile u32, cpu.SIM_SCGC5_ADDR);
 
+var OSC_CR = @intToPtr(*volatile u8, cpu.OSC_CR_ADDR);
+var MCG_C1 = @intToPtr(*volatile u8, cpu.MCG_C1_ADDR);
+var MCG_C2 = @intToPtr(*volatile u8, cpu.MCG_C2_ADDR);
+var MCG_C5 = @intToPtr(*volatile u8, cpu.MCG_C5_ADDR);
+var MCG_C6 = @intToPtr(*volatile u8, cpu.MCG_C6_ADDR);
+var MCG_S = @intToPtr(*volatile u8, cpu.MCG_S_ADDR);
+
+var SIM_CLKDIV1 = @intToPtr(*volatile u32, cpu.SIM_CLKDIV1_ADDR);
+var SIM_CLKDIV2 = @intToPtr(*volatile u32, cpu.SIM_CLKDIV2_ADDR);
+
+var SIM_SOPT2 = @intToPtr(*volatile u32, cpu.SIM_SOPT2_ADDR);
+
 extern fn _eram() void;
 extern fn __startup() void;
+
+extern var _etext: usize;
+extern var _sdata: usize;
+extern var _edata: usize;
+
+extern var _sbss: usize;
+extern var _ebss: usize;
 
 export const interrupt_vectors linksection(".vectors") = [_]extern fn () void{
     _eram,
@@ -123,6 +143,21 @@ export const interrupt_vectors linksection(".vectors") = [_]extern fn () void{
     interrupt.isr_software,
     interrupt.isr_ignore, // Reserved 111
 };
+//  The flash configuration appears at 0x400 and is loaded on boot.
+//    The first 8 bytes are the backdoor comparison key.
+//    The next 4 bytes are the FPROT registers.
+//
+//    Then, there's one byte each:
+//     FSEC, FOPT, FEPROT, FDPROT
+//
+//  For most of these fields, 0xFF are the permissive defaults. For
+//  FSEC, we'll set SEC to 10 to put the MCU in unsecure mode for
+//  unlimited flash access -> 0xFE.
+//
+export const flashconfigbytes: [16]u8 linksection(".flashconfig") = [_]u8{
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF,
+};
 
 pub fn setup() void {
     // The CPU has a watchdog feature which is on by default,
@@ -146,5 +181,109 @@ pub fn setup() void {
     // For the sake of simplicity, enable all GPIO port clocks
     SIM_SCGC5.* |= (cpu.SIM_SCGC5_PORTA_MASK | cpu.SIM_SCGC5_PORTB_MASK | cpu.SIM_SCGC5_PORTC_MASK | cpu.SIM_SCGC5_PORTD_MASK | cpu.SIM_SCGC5_PORTE_MASK);
 
-    c.c_startup();
+    // ----------------------------------------------------------------------------------
+    // Setup clocks
+    // ----------------------------------------------------------------------------------
+    // See section 5 in the Freescale K20 manual for how clock distribution works
+    // The limits are outlined in section 5.5:
+    //   Core and System clocks: max 72 MHz
+    //   Bus/peripherial clock:  max 50 MHz (integer divide of core)
+    //   Flash clock:            max 25 MHz
+    //
+    // The teensy 3.x has a 16 MHz external oscillator
+    // So we'll enable the external clock for the OSC module. Since
+    // we're in high-frequency mode, also enable capacitors
+    OSC_CR.* = cpu.OSC_CR_SC8P_MASK | cpu.OSC_CR_SC2P_MASK; // TODO This does not actually seem enable the ext crystal
+
+    // Set MCG to very high frequency crystal and request oscillator. We have
+    // to do this first so that the divisor will be correct (512 and not 16)
+    MCG_C2.* = cpu.mcg_c2_range0(2) | cpu.MCG_C2_EREFS0_MASK;
+
+    // Select the external reference clock for MCGOUTCLK
+    // The divider for the FLL has to be chosen that we get something in 31.25 to 39.0625 kHz
+    // 16MHz / 512 = 31.25 kHz -> set FRDIV to 4
+    MCG_C1.* = cpu.mcg_c1_clks(2) | cpu.mcg_c1_frdiv(4);
+
+    // Wait for OSC to become ready
+    while ((MCG_S.* & cpu.MCG_S_OSCINIT0_MASK) == 0) {}
+
+    // Wait for the FLL to synchronize to external reference
+    while ((MCG_S.* & cpu.MCG_S_IREFST_MASK) != 0) {}
+
+    // Wait for the clock mode to synchronize to external
+    while ((MCG_S.* & cpu.MCG_S_CLKST_MASK) != cpu.mcg_s_clkst(2)) {}
+
+    switch (config.frequancy) {
+        config.CpuFrequancy.F16MHz => {
+            MCG_C2.* = cpu.mcg_c2_range0(2) | cpu.MCG_C2_EREFS_MASK | cpu.MCG_C2_LP_MASK;
+        },
+        config.CpuFrequancy.F24MHz => {
+            MCG_C5.* = cpu.mcg_c5_prdiv0(7); // 16 MHz / 8 = 2 MHz (this needs to be 2-4MHz)
+            MCG_C6.* = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 48 MHz
+        },
+        config.CpuFrequancy.F48MHz => {
+            MCG_C5.* = cpu.mcg_c5_prdiv0(7); // 16 MHz / 8 = 2 MHz (this needs to be 2-4MHz)
+            MCG_C6.* = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 48 MHz
+        },
+        config.CpuFrequancy.F72MHz => {
+            MCG_C5.* = cpu.mcg_c5_prdiv0(5); // 16 MHz / 6 = 2.66 MHz (this needs to be 2-4MHz)
+            MCG_C6.* = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(3); // Enable PLL*27 = 71.82 MHz
+        },
+        config.CpuFrequancy.F96MHz => {
+            MCG_C5.* = cpu.mcg_c5_prdiv0(3); // 16MHz / 4 = 4MHz (this needs to be 2-4MHz)
+            MCG_C6.* = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 96 MHz
+        },
+    }
+
+    // Now that we setup and enabled the PLL, wait for it to become active
+    while ((MCG_S.* & cpu.MCG_S_PLLST_MASK) == 1) {}
+    // and locked
+    while ((MCG_S.* & cpu.MCG_S_LOCK0_MASK) == 1) {}
+
+    // -- For the modes <= 16 MHz, we have the MCG clock on 16 MHz, without FLL/PLL
+    //    Also, USB is not possible
+
+    switch (config.frequancy) {
+        config.CpuFrequancy.F16MHz => {
+            // 16 MHz core, 16 MHz bus, 16 MHz flash
+            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(0) | cpu.sim_clkdiv1_outdiv4(0);
+        },
+        config.CpuFrequancy.F24MHz => {
+            // PLL is 48 MHz
+            // 24 MHz core, 24 MHz bus, 24 MHz flash
+            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(1) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(1);
+            SIM_CLKDIV2.* = cpu.sim_clkdiv2_usbdiv(0); // 48 * 1/1 = 48
+        },
+        config.CpuFrequancy.F48MHz => {
+            // 48 MHz core, 48 MHz bus, 24 MHz flash, USB = 96 / 2
+            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(0) | cpu.sim_clkdiv1_outdiv4(1);
+            SIM_CLKDIV2.* = cpu.sim_clkdiv2_usbdiv(0); // 48 * 1/1 = 48
+        },
+        config.CpuFrequancy.F72MHz => {
+            // 72 MHz core, 36 MHz bus, 24 MHz flash
+            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(2);
+            SIM_CLKDIV2.* = cpu.sim_clkdiv2_usbdiv(2) | cpu.SIM_CLKDIV2_USBFRAC_MASK; // 72 * 2/3 = 48
+        },
+        config.CpuFrequancy.F96MHz => {
+            // 96 MHz core, 48 MHz bus, 24 MHz flash (OVERCLOCKED!)
+            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(3);
+            SIM_CLKDIV2.* = cpu.sim_clkdiv2_usbdiv(1); // 96 * 1/2 = 48
+        },
+    }
+
+    if (config.frequancy != config.CpuFrequancy.F16MHz) {
+        // Switch clock source to PLL, keep FLL divider at 512
+        MCG_C1.* = cpu.mcg_c1_clks(0) | cpu.mcg_c1_frdiv(4);
+
+        // Wait for the clock to sync
+        while ((MCG_S.* & cpu.MCG_S_CLKST_MASK) != cpu.mcg_s_clkst(3)) {}
+
+        // Use PLL for USB and Bus/peripherals, core for trace and put OSCERCLK0 on CLKOUT pin
+        SIM_SOPT2.* = cpu.SIM_SOPT2_USBSRC_MASK | cpu.SIM_SOPT2_PLLFLLSEL_MASK | cpu.SIM_SOPT2_TRACECLKSEL_MASK | cpu.sim_sopt2_clkoutsel(6);
+    }
+
+    var bss = @intToPtr([*]u8, _sbss);
+    @memset(bss, 0, _ebss - _sbss);
+
+    interrupt.interrupt_enable();
 }
