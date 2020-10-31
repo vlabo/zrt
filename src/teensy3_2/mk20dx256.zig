@@ -343,41 +343,143 @@ pub const MCG_S_LOCK0_SHIFT = 6;
 pub const MCG_S_LOLS0_MASK = 0x80;
 pub const MCG_S_LOLS0_SHIFT = 7;
 
-// Addresses
-pub const PORTB_PCR16_ADDR = 0x4004A040;
-pub const PORTB_PCR17_ADDR = 0x4004A044;
+const Port = struct {
+    controlRegister: [32]u32, // PCR 0-31
+    globalPinControlLow: u32, // GPCLR
+    globalPinControlHigh: u32, // GPCHR
+    reserved: [24]u8,
+    interuptStatusFlag: u32, // ISFR
+};
 
-pub const GPIOC_PSOR_ADDR = 0x400FF084;
-pub const GPIOC_PCOR_ADDR = 0x400FF088;
+const Gpio = struct {
+    dataOutput: u32, // PDOR
+    setOutput: u32, // PSOR
+    clearOutput: u32, // PCOR
+    toggleOutput: u32, // PTOR
+    dataInput: u32, // PDIR
+    dataDirection: u32, // PDDR
+};
 
-pub const GPIOC_PDDR_ADDR = 0x400FF094;
-pub const PORTC_PCR_ADDR = 0x4004B000;
+const UartMemMap = struct {
+    BDH: u8, // < UART Baud Rate Registers:High, offset: 0x0
+    BDL: u8, // < UART Baud Rate Registers: Low, offset: 0x1
+    C1: u8, // < UART Control Register 1, offset: 0x2
+    C2: u8, // < UART Control Register 2, offset: 0x3
+    S1: u8, // < UART Status Register 1, offset: 0x4
+    S2: u8, // < UART Status Register 2, offset: 0x5
+    C3: u8, // < UART Control Register 3, offset: 0x6
+    D: u8, // < UART Data Register, offset: 0x7
+    MA1: u8, // < UART Match Address Registers 1, offset: 0x8
+    MA2: u8, // < UART Match Address Registers 2, offset: 0x9
+    C4: u8, // < UART Control Register 4, offset: 0xA
+    C5: u8, // < UART Control Register 5, offset: 0xB
+    ED: u8, // < UART Extended Data Register, offset: 0xC
+    MODEM: u8, // < UART Modem Register, offset: 0xD
+    IR: u8, // < UART Infrared Register, offset: 0xE
+    RESERVED_0: u8,
+    PFIFO: u8, // < UART FIFO Parameters, offset: 0x10
+    CFIFO: u8, // < UART FIFO Control Register, offset: 0x11
+    SFIFO: u8, // < UART FIFO Status Register, offset: 0x12
+    TWFIFO: u8, // < UART FIFO Transmit Watermark, offset: 0x13
+    TCFIFO: u8, // < UART FIFO Transmit Count, offset: 0x14
+    RWFIFO: u8, // < UART FIFO Receive Watermark, offset: 0x15
+    RCFIFO: u8, // < UART FIFO Receive Count, offset: 0x16
+    RESERVED_1: u8,
+    C7816: u8, // < UART 7816 Control Register, offset: 0x18
+    IE7816: u8, // < UART 7816 Interrupt Enable Register, offset: 0x19
+    IS7816: u8, // < UART 7816 Interrupt Status Register, offset: 0x1A
+    WP7816_type: u8,
+    WN7816: u8, // < UART 7816 Wait N Register, offset: 0x1C
+    WF7816: u8, // < UART 7816 Wait FD Register, offset: 0x1D
+    ET7816: u8, // < UART 7816 Error Threshold Register, offset: 0x1E
+    TL7816: u8, // < UART 7816 Transmit Length Register, offset: 0x1F
+};
 
-pub const UART0_BASE_ADDR = 0x4006A000;
+pub const SystemStruct = struct {
+    Options1 : *volatile u32 = @intToPtr(*volatile u32, 0x40047000), // SIM_SOPT1
+    Options1ConfigurationRegister : *volatile u32 = @intToPtr(*volatile u32, 0x40047004), // SIM_SOPT1CFG
+    Options2 : *volatile u32 = @intToPtr(*volatile u32, 0x40048004), // SIM_SOPT2
+    Options4 : *volatile u32 = @intToPtr(*volatile u32, 0x4004800C), // SIM_SOPT4
+    Options5 : *volatile u32 = @intToPtr(*volatile u32, 0x40048010), // SIM_SOPT5
+    Options7 : *volatile u32 = @intToPtr(*volatile u32, 0x40048018), // SIM_SOPT7
+    DeviceIdentification : *volatile u32 = @intToPtr(*volatile u32, 0x40048024), // SIM_SDID
+    ClockGating1 : *volatile u32 = @intToPtr(*volatile u32, 0x40048028), // SIM_SCGC1
+    ClockGating2 : *volatile u32 = @intToPtr(*volatile u32, 0x4004802C), // SIM_SCGC2
+    ClockGating3 : *volatile u32 = @intToPtr(*volatile u32, 0x40048030), // SIM_SCGC3
+    ClockGating4 : *volatile u32 = @intToPtr(*volatile u32, 0x40048034), // SIM_SCGC4
+    ClockGating5 : *volatile u32 = @intToPtr(*volatile u32, 0x40048038), // SIM_SCGC5
+    ClockGating6 : *volatile u32 = @intToPtr(*volatile u32, 0x4004803C), // SIM_SCGC6
+    ClockGating7 : *volatile u32 = @intToPtr(*volatile u32, 0x40048040), // SIM_SCGC7
+    ClockDevider1 : *volatile u32 = @intToPtr(*volatile u32, 0x40048044), // SIM_CLKDIV1
+    ClockDevider2 : *volatile u32 = @intToPtr(*volatile u32, 0x40048048), // SIM_CLKDIV2
+    FlashConfiguration1 : *volatile u32 = @intToPtr(*volatile u32, 0x4004804C), // SIM_FCFG1
+    FlashConfiguration2 : *volatile u32 = @intToPtr(*volatile u32, 0x40048050), // SIM_FCFG2
+    UniqueIdentificationHigh : *volatile u32 = @intToPtr(*volatile u32, 0x40048054), // SIM_UIDH
+    UniqueIdentificationMidHigh : *volatile u32 = @intToPtr(*volatile u32, 0x40048058), // SIM_UIDMH
+    UniqueIdentificationMidLow : *volatile u32 = @intToPtr(*volatile u32, 0x4004805C), // SIM_UIDML
+    UniqueIdentificationLow : *volatile u32 = @intToPtr(*volatile u32, 0x40048060), // SIM_UIDL
+};
 
-pub const WDOG_UNLOCK_ADDR = 0x4005200E;
-pub const WDOG_STCTRLH_ADDR = 0x40052000;
+const MultiPurposeClockGenerator = struct {
+    control1: u8, // MCG_C1
+    control2: u8, // MCG_C2
+    control3: u8, // MCG_C3
+    control4: u8, // MCG_C4
+    control5: u8, // MCG_C5
+    control6: u8, // MCG_C6
+    status: u8, // MCG_S
+    reserved0: u8,
+    statusAndControl: u8, // MCG_SC
+    reserved1: u8,
+    autoTrimCompareValueHigh: u8, // MCG_ATCVH
+    autoTrimCompareValueLow: u8, // MCG_ATCVL
+    control7: u8, // MCG_C7
+    control8: u8, // MCG_C8
+};
 
-pub const PMC_REGSC_ADDR = 0x4007D002; // 8 bit
+const PowerStruct = struct {
+    modeProtection: u8, // SMC_PMPROT
+    modeControl: u8, // SMC_PMCTRL
+    vllsControl: u8, // SMC_VLLSCTRL
+    modeStatus: u8, // SMC_PMSTAT
+};
 
-pub const SMC_PMPROT_ADDR = 0x4007E000;
+const WatchdogStruct = struct {
+    statusAndControlHigh: u16, // WDOG_STCTRLH
+    statusAndControlLow: u16, // WDOG_STCTRLL
+    timeoutValueHigh: u16, // WDOG_TOVALH
+    timeoutValueLow: u16, // WDOG_TOVALL
+    windowRegisterHigh: u16, // WDOG_WINH
+    windowRegisterLow: u16, // WDOG_WINL
+    refresh: u16, // WDOG_REFRESH
+    unlock: u16, // WDOG_UNLOCK
+    timerOutputHigh: u16, // WDOG_TMROUTH
+    timerOutputLow: u16, // WDOG_TMROUTL
+    resetCount: u16, // WDOG_RSTCNT
+    prescaler: u16, // WDOG_PRESC
+};
 
-pub const SIM_SCGC4_ADDR = 0x40048034;
-pub const SIM_SCGC5_ADDR = 0x40048038;
-pub const SIM_CLKDIV1_ADDR = 0x40048044;
-pub const SIM_CLKDIV2_ADDR = 0x40048048;
+pub var PortA align(32) = @intToPtr(*volatile Port, 0x40049000);
+pub var PortB align(32) = @intToPtr(*volatile Port, 0x4004A000);
+pub var PortC align(32) = @intToPtr(*volatile Port, 0x4004B000);
+pub var PortD align(32) = @intToPtr(*volatile Port, 0x4004C000);
+pub var PortE align(32) = @intToPtr(*volatile Port, 0x4004D000);
 
-pub const SIM_SOPT2_ADDR = 0x40048004;
+pub var GpioA align(32) = @intToPtr(*volatile Gpio, 0x400FF000);
+pub var GpioB align(32) = @intToPtr(*volatile Gpio, 0x400FF040);
+pub var GpioC align(32) = @intToPtr(*volatile Gpio, 0x400FF080);
+pub var GpioD align(32) = @intToPtr(*volatile Gpio, 0x400FF0C0);
+pub var GpioE align(32) = @intToPtr(*volatile Gpio, 0x400FF100);
 
-pub const MCG_C1_ADDR = 0x40064000;
-pub const MCG_C2_ADDR = 0x40064001;
-pub const MCG_C3_ADDR = 0x40064002;
-pub const MCG_C4_ADDR = 0x40064003;
-pub const MCG_C5_ADDR = 0x40064004;
-pub const MCG_C6_ADDR = 0x40064005;
-pub const MCG_S_ADDR = 0x40064006;
+pub var System = SystemStruct{};
+pub var Uart0 = @intToPtr(*volatile UartMemMap, 0x4006A000);
+pub var OscillatorControl = @intToPtr(*volatile u8, 0x40065000);
+pub var ClockGenerator = @intToPtr(*volatile MultiPurposeClockGenerator, 0x40064000);
+pub var RegolatorStatusAndControl = @intToPtr(*volatile u8, 0x4007D002); // PMC_REGSC
 
-pub const OSC_CR_ADDR = 0x40065000;
+pub var Power = @intToPtr(*volatile PowerStruct, 0x4007E000);
+
+pub var Watchdog = @intToPtr(*volatile WatchdogStruct, 0x40052000);
 
 pub fn port_pcr_mux(comptime x: comptime_int) comptime_int {
     return left_shift_and_mask(x, PORT_PCR_MUX_SHIFT, PORT_PCR_MUX_MASK);
@@ -538,4 +640,56 @@ fn left_shift_and_mask(comptime x: comptime_int, comptime shift: u5, comptime ma
 
 pub inline fn nop() void {
     asm volatile ("nop");
+}
+
+test "PCR" {
+    const expectEqual = @import("std").testing.expectEqual;
+    var port align(32) = @intToPtr(*volatile Port, 0x40049000);
+    expectEqual(@as(usize, 0x40049000), @ptrToInt(&port.controlRegister[0]));
+    expectEqual(@as(usize, 0x40049004), @ptrToInt(&port.controlRegister[1]));
+    expectEqual(@as(usize, 0x40049008), @ptrToInt(&port.controlRegister[2]));
+    expectEqual(@as(usize, 0x4004900C), @ptrToInt(&port.controlRegister[3]));
+    expectEqual(@as(usize, 0x40049010), @ptrToInt(&port.controlRegister[4]));
+    expectEqual(@as(usize, 0x40049014), @ptrToInt(&port.controlRegister[5]));
+    expectEqual(@as(usize, 0x40049018), @ptrToInt(&port.controlRegister[6]));
+    expectEqual(@as(usize, 0x4004901C), @ptrToInt(&port.controlRegister[7]));
+    expectEqual(@as(usize, 0x40049020), @ptrToInt(&port.controlRegister[8]));
+    expectEqual(@as(usize, 0x40049024), @ptrToInt(&port.controlRegister[9]));
+    expectEqual(@as(usize, 0x40049028), @ptrToInt(&port.controlRegister[10]));
+    expectEqual(@as(usize, 0x4004902C), @ptrToInt(&port.controlRegister[11]));
+    expectEqual(@as(usize, 0x40049030), @ptrToInt(&port.controlRegister[12]));
+    expectEqual(@as(usize, 0x40049034), @ptrToInt(&port.controlRegister[13]));
+    expectEqual(@as(usize, 0x40049038), @ptrToInt(&port.controlRegister[14]));
+    expectEqual(@as(usize, 0x4004903C), @ptrToInt(&port.controlRegister[15]));
+    expectEqual(@as(usize, 0x40049040), @ptrToInt(&port.controlRegister[16]));
+    expectEqual(@as(usize, 0x40049044), @ptrToInt(&port.controlRegister[17]));
+    expectEqual(@as(usize, 0x40049048), @ptrToInt(&port.controlRegister[18]));
+    expectEqual(@as(usize, 0x4004904C), @ptrToInt(&port.controlRegister[19]));
+    expectEqual(@as(usize, 0x40049050), @ptrToInt(&port.controlRegister[20]));
+    expectEqual(@as(usize, 0x40049054), @ptrToInt(&port.controlRegister[21]));
+    expectEqual(@as(usize, 0x40049058), @ptrToInt(&port.controlRegister[22]));
+    expectEqual(@as(usize, 0x4004905C), @ptrToInt(&port.controlRegister[23]));
+    expectEqual(@as(usize, 0x40049060), @ptrToInt(&port.controlRegister[24]));
+    expectEqual(@as(usize, 0x40049064), @ptrToInt(&port.controlRegister[25]));
+    expectEqual(@as(usize, 0x40049068), @ptrToInt(&port.controlRegister[26]));
+    expectEqual(@as(usize, 0x4004906C), @ptrToInt(&port.controlRegister[27]));
+    expectEqual(@as(usize, 0x40049070), @ptrToInt(&port.controlRegister[28]));
+    expectEqual(@as(usize, 0x40049074), @ptrToInt(&port.controlRegister[29]));
+    expectEqual(@as(usize, 0x40049078), @ptrToInt(&port.controlRegister[30]));
+    expectEqual(@as(usize, 0x4004907C), @ptrToInt(&port.controlRegister[31]));
+    expectEqual(@as(usize, 0x40049080), @ptrToInt(&port.gpclr));
+    expectEqual(@as(usize, 0x40049084), @ptrToInt(&port.gpchr));
+    expectEqual(@as(usize, 0x400490A0), @ptrToInt(&port.isfr));
+}
+
+test "Gpio" {
+    const expectEqual = @import("std").testing.expectEqual;
+    var gpio align(32) = @intToPtr(*volatile Gpio, 0x400FF000);
+
+    expectEqual(@as(usize, 0x400FF000), @ptrToInt(&gpio.dataOutput));
+    expectEqual(@as(usize, 0x400FF004), @ptrToInt(&gpio.setOutput));
+    expectEqual(@as(usize, 0x400FF008), @ptrToInt(&gpio.clearOutput));
+    expectEqual(@as(usize, 0x400FF00C), @ptrToInt(&gpio.toggleOutput));
+    expectEqual(@as(usize, 0x400FF010), @ptrToInt(&gpio.dataInput));
+    expectEqual(@as(usize, 0x400FF014), @ptrToInt(&gpio.dataDirection));
 }

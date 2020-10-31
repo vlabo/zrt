@@ -4,21 +4,6 @@ const cpu = @import("mk20dx256.zig");
 const interrupt = @import("interrupt.zig");
 const config = @import("config.zig");
 
-var PMC_REGSC = @intToPtr(*volatile u8, cpu.PMC_REGSC_ADDR);
-var SIM_SCGC5 = @intToPtr(*volatile u32, cpu.SIM_SCGC5_ADDR);
-
-var OSC_CR = @intToPtr(*volatile u8, cpu.OSC_CR_ADDR);
-var MCG_C1 = @intToPtr(*volatile u8, cpu.MCG_C1_ADDR);
-var MCG_C2 = @intToPtr(*volatile u8, cpu.MCG_C2_ADDR);
-var MCG_C5 = @intToPtr(*volatile u8, cpu.MCG_C5_ADDR);
-var MCG_C6 = @intToPtr(*volatile u8, cpu.MCG_C6_ADDR);
-var MCG_S = @intToPtr(*volatile u8, cpu.MCG_S_ADDR);
-
-var SIM_CLKDIV1 = @intToPtr(*volatile u32, cpu.SIM_CLKDIV1_ADDR);
-var SIM_CLKDIV2 = @intToPtr(*volatile u32, cpu.SIM_CLKDIV2_ADDR);
-
-var SIM_SOPT2 = @intToPtr(*volatile u32, cpu.SIM_SOPT2_ADDR);
-
 extern fn _eram() void;
 extern fn __startup() void;
 
@@ -174,12 +159,12 @@ pub fn setup() void {
     // There is a write-once-after-reset register that allows to
     // set which power states are available. Let's set it here.
 
-    if (PMC_REGSC.* & cpu.PMC_REGSC_ACKISO_MASK != 0) {
-        PMC_REGSC.* |= cpu.PMC_REGSC_ACKISO_MASK;
+    if (cpu.RegolatorStatusAndControl.* & cpu.PMC_REGSC_ACKISO_MASK != 0) {
+        cpu.RegolatorStatusAndControl.* |= cpu.PMC_REGSC_ACKISO_MASK;
     }
 
     // For the sake of simplicity, enable all GPIO port clocks
-    SIM_SCGC5.* |= (cpu.SIM_SCGC5_PORTA_MASK | cpu.SIM_SCGC5_PORTB_MASK | cpu.SIM_SCGC5_PORTC_MASK | cpu.SIM_SCGC5_PORTD_MASK | cpu.SIM_SCGC5_PORTE_MASK);
+    cpu.System.ClockGating5.* |= (cpu.SIM_SCGC5_PORTA_MASK | cpu.SIM_SCGC5_PORTB_MASK | cpu.SIM_SCGC5_PORTC_MASK | cpu.SIM_SCGC5_PORTD_MASK | cpu.SIM_SCGC5_PORTE_MASK);
 
     // ----------------------------------------------------------------------------------
     // Setup clocks
@@ -193,52 +178,53 @@ pub fn setup() void {
     // The teensy 3.x has a 16 MHz external oscillator
     // So we'll enable the external clock for the OSC module. Since
     // we're in high-frequency mode, also enable capacitors
-    OSC_CR.* = cpu.OSC_CR_SC8P_MASK | cpu.OSC_CR_SC2P_MASK; // TODO This does not actually seem enable the ext crystal
+    cpu.OscillatorControl.* = cpu.OSC_CR_SC8P_MASK | cpu.OSC_CR_SC2P_MASK; // TODO This does not actually seem enable the ext crystal
+
 
     // Set MCG to very high frequency crystal and request oscillator. We have
     // to do this first so that the divisor will be correct (512 and not 16)
-    MCG_C2.* = cpu.mcg_c2_range0(2) | cpu.MCG_C2_EREFS0_MASK;
+    cpu.ClockGenerator.control2 = cpu.mcg_c2_range0(2) | cpu.MCG_C2_EREFS0_MASK;
 
     // Select the external reference clock for MCGOUTCLK
     // The divider for the FLL has to be chosen that we get something in 31.25 to 39.0625 kHz
     // 16MHz / 512 = 31.25 kHz -> set FRDIV to 4
-    MCG_C1.* = cpu.mcg_c1_clks(2) | cpu.mcg_c1_frdiv(4);
+    cpu.ClockGenerator.control1 = cpu.mcg_c1_clks(2) | cpu.mcg_c1_frdiv(4);
 
     // Wait for OSC to become ready
-    while ((MCG_S.* & cpu.MCG_S_OSCINIT0_MASK) == 0) {}
+    while ((cpu.ClockGenerator.status & cpu.MCG_S_OSCINIT0_MASK) == 0) {}
 
     // Wait for the FLL to synchronize to external reference
-    while ((MCG_S.* & cpu.MCG_S_IREFST_MASK) != 0) {}
+    while ((cpu.ClockGenerator.status & cpu.MCG_S_IREFST_MASK) != 0) {}
 
     // Wait for the clock mode to synchronize to external
-    while ((MCG_S.* & cpu.MCG_S_CLKST_MASK) != cpu.mcg_s_clkst(2)) {}
+    while ((cpu.ClockGenerator.status & cpu.MCG_S_CLKST_MASK) != cpu.mcg_s_clkst(2)) {}
 
     switch (config.frequancy) {
         config.CpuFrequancy.F16MHz => {
-            MCG_C2.* = cpu.mcg_c2_range0(2) | cpu.MCG_C2_EREFS_MASK | cpu.MCG_C2_LP_MASK;
+            cpu.ClockGenerator.control2 = cpu.mcg_c2_range0(2) | cpu.MCG_C2_EREFS_MASK | cpu.MCG_C2_LP_MASK;
         },
         config.CpuFrequancy.F24MHz => {
-            MCG_C5.* = cpu.mcg_c5_prdiv0(7); // 16 MHz / 8 = 2 MHz (this needs to be 2-4MHz)
-            MCG_C6.* = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 48 MHz
+            cpu.ClockGenerator.control5 = cpu.mcg_c5_prdiv0(7); // 16 MHz / 8 = 2 MHz (this needs to be 2-4MHz)
+            cpu.ClockGenerator.control6 = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 48 MHz
         },
         config.CpuFrequancy.F48MHz => {
-            MCG_C5.* = cpu.mcg_c5_prdiv0(7); // 16 MHz / 8 = 2 MHz (this needs to be 2-4MHz)
-            MCG_C6.* = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 48 MHz
+            cpu.ClockGenerator.control5 = cpu.mcg_c5_prdiv0(7); // 16 MHz / 8 = 2 MHz (this needs to be 2-4MHz)
+            cpu.ClockGenerator.control6 = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 48 MHz
         },
         config.CpuFrequancy.F72MHz => {
-            MCG_C5.* = cpu.mcg_c5_prdiv0(5); // 16 MHz / 6 = 2.66 MHz (this needs to be 2-4MHz)
-            MCG_C6.* = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(3); // Enable PLL*27 = 71.82 MHz
+            cpu.ClockGenerator.control5 = cpu.mcg_c5_prdiv0(5); // 16 MHz / 6 = 2.66 MHz (this needs to be 2-4MHz)
+            cpu.ClockGenerator.control6 = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(3); // Enable PLL*27 = 71.82 MHz
         },
         config.CpuFrequancy.F96MHz => {
-            MCG_C5.* = cpu.mcg_c5_prdiv0(3); // 16MHz / 4 = 4MHz (this needs to be 2-4MHz)
-            MCG_C6.* = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 96 MHz
+            cpu.ClockGenerator.control5 = cpu.mcg_c5_prdiv0(3); // 16MHz / 4 = 4MHz (this needs to be 2-4MHz)
+            cpu.ClockGenerator.control6 = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 96 MHz
         },
     }
 
     // Now that we setup and enabled the PLL, wait for it to become active
-    while ((MCG_S.* & cpu.MCG_S_PLLST_MASK) == 1) {}
+    while ((cpu.ClockGenerator.status & cpu.MCG_S_PLLST_MASK) == 1) {}
     // and locked
-    while ((MCG_S.* & cpu.MCG_S_LOCK0_MASK) == 1) {}
+    while ((cpu.ClockGenerator.status & cpu.MCG_S_LOCK0_MASK) == 1) {}
 
     // -- For the modes <= 16 MHz, we have the MCG clock on 16 MHz, without FLL/PLL
     //    Also, USB is not possible
@@ -246,40 +232,40 @@ pub fn setup() void {
     switch (config.frequancy) {
         config.CpuFrequancy.F16MHz => {
             // 16 MHz core, 16 MHz bus, 16 MHz flash
-            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(0) | cpu.sim_clkdiv1_outdiv4(0);
+            cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(0) | cpu.sim_clkdiv1_outdiv4(0);
         },
         config.CpuFrequancy.F24MHz => {
             // PLL is 48 MHz
             // 24 MHz core, 24 MHz bus, 24 MHz flash
-            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(1) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(1);
-            SIM_CLKDIV2.* = cpu.sim_clkdiv2_usbdiv(0); // 48 * 1/1 = 48
+            cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(1) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(1);
+            cpu.System.ClockDevider2.* = cpu.sim_clkdiv2_usbdiv(0); // 48 * 1/1 = 48
         },
         config.CpuFrequancy.F48MHz => {
             // 48 MHz core, 48 MHz bus, 24 MHz flash, USB = 96 / 2
-            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(0) | cpu.sim_clkdiv1_outdiv4(1);
-            SIM_CLKDIV2.* = cpu.sim_clkdiv2_usbdiv(0); // 48 * 1/1 = 48
+            cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(0) | cpu.sim_clkdiv1_outdiv4(1);
+            cpu.System.ClockDevider2.* = cpu.sim_clkdiv2_usbdiv(0); // 48 * 1/1 = 48
         },
         config.CpuFrequancy.F72MHz => {
             // 72 MHz core, 36 MHz bus, 24 MHz flash
-            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(2);
-            SIM_CLKDIV2.* = cpu.sim_clkdiv2_usbdiv(2) | cpu.SIM_CLKDIV2_USBFRAC_MASK; // 72 * 2/3 = 48
+            cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(2);
+            cpu.System.ClockDevider2.* = cpu.sim_clkdiv2_usbdiv(2) | cpu.SIM_CLKDIV2_USBFRAC_MASK; // 72 * 2/3 = 48
         },
         config.CpuFrequancy.F96MHz => {
             // 96 MHz core, 48 MHz bus, 24 MHz flash (OVERCLOCKED!)
-            SIM_CLKDIV1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(3);
-            SIM_CLKDIV2.* = cpu.sim_clkdiv2_usbdiv(1); // 96 * 1/2 = 48
+            cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(3);
+            cpu.System.ClockDevider2.* = cpu.sim_clkdiv2_usbdiv(1); // 96 * 1/2 = 48
         },
     }
 
     if (config.frequancy != config.CpuFrequancy.F16MHz) {
         // Switch clock source to PLL, keep FLL divider at 512
-        MCG_C1.* = cpu.mcg_c1_clks(0) | cpu.mcg_c1_frdiv(4);
+        cpu.ClockGenerator.control1 = cpu.mcg_c1_clks(0) | cpu.mcg_c1_frdiv(4);
 
         // Wait for the clock to sync
-        while ((MCG_S.* & cpu.MCG_S_CLKST_MASK) != cpu.mcg_s_clkst(3)) {}
+        while ((cpu.ClockGenerator.status & cpu.MCG_S_CLKST_MASK) != cpu.mcg_s_clkst(3)) {}
 
         // Use PLL for USB and Bus/peripherals, core for trace and put OSCERCLK0 on CLKOUT pin
-        SIM_SOPT2.* = cpu.SIM_SOPT2_USBSRC_MASK | cpu.SIM_SOPT2_PLLFLLSEL_MASK | cpu.SIM_SOPT2_TRACECLKSEL_MASK | cpu.sim_sopt2_clkoutsel(6);
+        cpu.System.Options2.* = cpu.SIM_SOPT2_USBSRC_MASK | cpu.SIM_SOPT2_PLLFLLSEL_MASK | cpu.SIM_SOPT2_TRACECLKSEL_MASK | cpu.sim_sopt2_clkoutsel(6);
     }
 
     var bss = @intToPtr([*]u8, _sbss);

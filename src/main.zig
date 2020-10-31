@@ -10,11 +10,11 @@ pub fn main() noreturn {
 
     var i: u32 = 0;
     while (true) {
-        led.set_high();
-        time.delay(1000);
+        led.toggle();
+        time.delay(900);
         out.print("led is on:  {}\n", .{i}) catch {};
 
-        led.set_low();
+        led.toggle();
         time.delay(100);
         out.print("led is off: {}\n", .{i}) catch {};
 
