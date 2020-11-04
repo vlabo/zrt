@@ -1,19 +1,6 @@
 pub const PORT_PCR_MUX_SHIFT = 8;
 pub const PORT_PCR_MUX_MASK = 0x700;
 
-pub const UART_BDH_SBR_SHIFT = 0;
-pub const UART_BDH_SBR_MASK = 0x1F;
-
-pub const UART_BDL_SBR_MASK = 0xFF;
-pub const UART_BDL_SBR_SHIFT = 0;
-
-pub const UART_C4_BRFA_MASK = 0x1F;
-pub const UART_C4_BRFA_SHIFT = 0;
-
-pub const UART_S1_TDRE_MASK = 0x80;
-
-pub const UART_C2_TE_MASK = 0x8;
-
 pub const PORT_PCR_SRE_MASK = 0x4;
 pub const PORT_PCR_DSE_MASK = 0x40;
 
@@ -29,6 +16,270 @@ pub const PMC_REGSC_ACKISO_MASK = 0x8;
 pub const PMC_REGSC_ACKISO_SHIFT = 3;
 pub const PMC_REGSC_BGEN_MASK = 0x10;
 pub const PMC_REGSC_BGEN_SHIFT = 4;
+
+// BDH Bit Fields
+pub const UART_BDH_SBR_MASK = 0x1F;
+pub const UART_BDH_SBR_SHIFT = 0;
+pub const UART_BDH_RXEDGIE_MASK = 0x40;
+pub const UART_BDH_RXEDGIE_SHIFT = 6;
+pub const UART_BDH_LBKDIE_MASK = 0x80;
+pub const UART_BDH_LBKDIE_SHIFT = 7;
+// BDL Bit Fields
+pub const UART_BDL_SBR_MASK = 0xFF;
+pub const UART_BDL_SBR_SHIFT = 0;
+// C1 Bit Fields
+pub const UART_C1_PT_MASK = 0x1;
+pub const UART_C1_PT_SHIFT = 0;
+pub const UART_C1_PE_MASK = 0x2;
+pub const UART_C1_PE_SHIFT = 1;
+pub const UART_C1_ILT_MASK = 0x4;
+pub const UART_C1_ILT_SHIFT = 2;
+pub const UART_C1_WAKE_MASK = 0x8;
+pub const UART_C1_WAKE_SHIFT = 3;
+pub const UART_C1_M_MASK = 0x10;
+pub const UART_C1_M_SHIFT = 4;
+pub const UART_C1_RSRC_MASK = 0x20;
+pub const UART_C1_RSRC_SHIFT = 5;
+pub const UART_C1_UARTSWAI_MASK = 0x40;
+pub const UART_C1_UARTSWAI_SHIFT = 6;
+pub const UART_C1_LOOPS_MASK = 0x80;
+pub const UART_C1_LOOPS_SHIFT = 7;
+// C2 Bit Fields
+pub const UART_C2_SBK_MASK = 0x1;
+pub const UART_C2_SBK_SHIFT = 0;
+pub const UART_C2_RWU_MASK = 0x2;
+pub const UART_C2_RWU_SHIFT = 1;
+pub const UART_C2_RE_MASK = 0x4;
+pub const UART_C2_RE_SHIFT = 2;
+pub const UART_C2_TE_MASK = 0x8;
+pub const UART_C2_TE_SHIFT = 3;
+pub const UART_C2_ILIE_MASK = 0x10;
+pub const UART_C2_ILIE_SHIFT = 4;
+pub const UART_C2_RIE_MASK = 0x20;
+pub const UART_C2_RIE_SHIFT = 5;
+pub const UART_C2_TCIE_MASK = 0x40;
+pub const UART_C2_TCIE_SHIFT = 6;
+pub const UART_C2_TIE_MASK = 0x80;
+pub const UART_C2_TIE_SHIFT = 7;
+// S1 Bit Fields
+pub const UART_S1_PF_MASK = 0x1;
+pub const UART_S1_PF_SHIFT = 0;
+pub const UART_S1_FE_MASK = 0x2;
+pub const UART_S1_FE_SHIFT = 1;
+pub const UART_S1_NF_MASK = 0x4;
+pub const UART_S1_NF_SHIFT = 2;
+pub const UART_S1_OR_MASK = 0x8;
+pub const UART_S1_OR_SHIFT = 3;
+pub const UART_S1_IDLE_MASK = 0x10;
+pub const UART_S1_IDLE_SHIFT = 4;
+pub const UART_S1_RDRF_MASK = 0x20;
+pub const UART_S1_RDRF_SHIFT = 5;
+pub const UART_S1_TC_MASK = 0x40;
+pub const UART_S1_TC_SHIFT = 6;
+pub const UART_S1_TDRE_MASK = 0x80;
+pub const UART_S1_TDRE_SHIFT = 7;
+// S2 Bit Fields
+pub const UART_S2_RAF_MASK = 0x1;
+pub const UART_S2_RAF_SHIFT = 0;
+pub const UART_S2_LBKDE_MASK = 0x2;
+pub const UART_S2_LBKDE_SHIFT = 1;
+pub const UART_S2_BRK13_MASK = 0x4;
+pub const UART_S2_BRK13_SHIFT = 2;
+pub const UART_S2_RWUID_MASK = 0x8;
+pub const UART_S2_RWUID_SHIFT = 3;
+pub const UART_S2_RXINV_MASK = 0x10;
+pub const UART_S2_RXINV_SHIFT = 4;
+pub const UART_S2_MSBF_MASK = 0x20;
+pub const UART_S2_MSBF_SHIFT = 5;
+pub const UART_S2_RXEDGIF_MASK = 0x40;
+pub const UART_S2_RXEDGIF_SHIFT = 6;
+pub const UART_S2_LBKDIF_MASK = 0x80;
+pub const UART_S2_LBKDIF_SHIFT = 7;
+// C3 Bit Fields
+pub const UART_C3_PEIE_MASK = 0x1;
+pub const UART_C3_PEIE_SHIFT = 0;
+pub const UART_C3_FEIE_MASK = 0x2;
+pub const UART_C3_FEIE_SHIFT = 1;
+pub const UART_C3_NEIE_MASK = 0x4;
+pub const UART_C3_NEIE_SHIFT = 2;
+pub const UART_C3_ORIE_MASK = 0x8;
+pub const UART_C3_ORIE_SHIFT = 3;
+pub const UART_C3_TXINV_MASK = 0x10;
+pub const UART_C3_TXINV_SHIFT = 4;
+pub const UART_C3_TXDIR_MASK = 0x20;
+pub const UART_C3_TXDIR_SHIFT = 5;
+pub const UART_C3_T8_MASK = 0x40;
+pub const UART_C3_T8_SHIFT = 6;
+pub const UART_C3_R8_MASK = 0x80;
+pub const UART_C3_R8_SHIFT = 7;
+// D Bit Fields
+pub const UART_D_RT_MASK = 0xFF;
+pub const UART_D_RT_SHIFT = 0;
+// MA1 Bit Fields
+pub const UART_MA1_MA_MASK = 0xFF;
+pub const UART_MA1_MA_SHIFT = 0;
+// MA2 Bit Fields
+pub const UART_MA2_MA_MASK = 0xFF;
+pub const UART_MA2_MA_SHIFT = 0;
+// C4 Bit Fields
+pub const UART_C4_BRFA_MASK = 0x1F;
+pub const UART_C4_BRFA_SHIFT = 0;
+pub const UART_C4_M10_MASK = 0x20;
+pub const UART_C4_M10_SHIFT = 5;
+pub const UART_C4_MAEN2_MASK = 0x40;
+pub const UART_C4_MAEN2_SHIFT = 6;
+pub const UART_C4_MAEN1_MASK = 0x80;
+pub const UART_C4_MAEN1_SHIFT = 7;
+// C5 Bit Fields
+pub const UART_C5_RDMAS_MASK = 0x20;
+pub const UART_C5_RDMAS_SHIFT = 5;
+pub const UART_C5_TDMAS_MASK = 0x80;
+pub const UART_C5_TDMAS_SHIFT = 7;
+// ED Bit Fields
+pub const UART_ED_PARITYE_MASK = 0x40;
+pub const UART_ED_PARITYE_SHIFT = 6;
+pub const UART_ED_NOISY_MASK = 0x80;
+pub const UART_ED_NOISY_SHIFT = 7;
+// MODEM Bit Fields
+pub const UART_MODEM_TXCTSE_MASK = 0x1;
+pub const UART_MODEM_TXCTSE_SHIFT = 0;
+pub const UART_MODEM_TXRTSE_MASK = 0x2;
+pub const UART_MODEM_TXRTSE_SHIFT = 1;
+pub const UART_MODEM_TXRTSPOL_MASK = 0x4;
+pub const UART_MODEM_TXRTSPOL_SHIFT = 2;
+pub const UART_MODEM_RXRTSE_MASK = 0x8;
+pub const UART_MODEM_RXRTSE_SHIFT = 3;
+// IR Bit Fields
+pub const UART_IR_TNP_MASK = 0x3;
+pub const UART_IR_TNP_SHIFT = 0;
+
+pub const UART_IR_IREN_MASK = 0x4;
+pub const UART_IR_IREN_SHIFT = 2;
+// PFIFO Bit Fields
+pub const UART_PFIFO_RXFIFOSIZE_MASK = 0x7;
+pub const UART_PFIFO_RXFIFOSIZE_SHIFT = 0;
+pub const UART_PFIFO_RXFE_MASK = 0x8;
+pub const UART_PFIFO_RXFE_SHIFT = 3;
+pub const UART_PFIFO_TXFIFOSIZE_MASK = 0x70;
+pub const UART_PFIFO_TXFIFOSIZE_SHIFT = 4;
+pub const UART_PFIFO_TXFE_MASK = 0x80;
+pub const UART_PFIFO_TXFE_SHIFT = 7;
+// CFIFO Bit Fields
+pub const UART_CFIFO_RXUFE_MASK = 0x1;
+pub const UART_CFIFO_RXUFE_SHIFT = 0;
+pub const UART_CFIFO_TXOFE_MASK = 0x2;
+pub const UART_CFIFO_TXOFE_SHIFT = 1;
+pub const UART_CFIFO_RXFLUSH_MASK = 0x40;
+pub const UART_CFIFO_RXFLUSH_SHIFT = 6;
+pub const UART_CFIFO_TXFLUSH_MASK = 0x80;
+pub const UART_CFIFO_TXFLUSH_SHIFT = 7;
+// SFIFO Bit Fields
+pub const UART_SFIFO_RXUF_MASK = 0x1;
+pub const UART_SFIFO_RXUF_SHIFT = 0;
+pub const UART_SFIFO_TXOF_MASK = 0x2;
+pub const UART_SFIFO_TXOF_SHIFT = 1;
+pub const UART_SFIFO_RXEMPT_MASK = 0x40;
+pub const UART_SFIFO_RXEMPT_SHIFT = 6;
+pub const UART_SFIFO_TXEMPT_MASK = 0x80;
+pub const UART_SFIFO_TXEMPT_SHIFT = 7;
+// TWFIFO Bit Fields
+pub const UART_TWFIFO_TXWATER_MASK = 0xFF;
+pub const UART_TWFIFO_TXWATER_SHIFT = 0;
+// TCFIFO Bit Fields
+pub const UART_TCFIFO_TXCOUNT_MASK = 0xFF;
+pub const UART_TCFIFO_TXCOUNT_SHIFT = 0;
+// RWFIFO Bit Fields
+pub const UART_RWFIFO_RXWATER_MASK = 0xFF;
+pub const UART_RWFIFO_RXWATER_SHIFT = 0;
+// RCFIFO Bit Fields
+pub const UART_RCFIFO_RXCOUNT_MASK = 0xFF;
+pub const UART_RCFIFO_RXCOUNT_SHIFT = 0;
+// C7816 Bit Fields
+pub const UART_C7816_ISO_7816E_MASK = 0x1;
+pub const UART_C7816_ISO_7816E_SHIFT = 0;
+pub const UART_C7816_TTYPE_MASK = 0x2;
+pub const UART_C7816_TTYPE_SHIFT = 1;
+pub const UART_C7816_INIT_MASK = 0x4;
+pub const UART_C7816_INIT_SHIFT = 2;
+pub const UART_C7816_ANACK_MASK = 0x8;
+pub const UART_C7816_ANACK_SHIFT = 3;
+pub const UART_C7816_ONACK_MASK = 0x10;
+pub const UART_C7816_ONACK_SHIFT = 4;
+// IE7816 Bit Fields
+pub const UART_IE7816_RXTE_MASK = 0x1;
+pub const UART_IE7816_RXTE_SHIFT = 0;
+pub const UART_IE7816_TXTE_MASK = 0x2;
+pub const UART_IE7816_TXTE_SHIFT = 1;
+pub const UART_IE7816_GTVE_MASK = 0x4;
+pub const UART_IE7816_GTVE_SHIFT = 2;
+pub const UART_IE7816_INITDE_MASK = 0x10;
+pub const UART_IE7816_INITDE_SHIFT = 4;
+pub const UART_IE7816_BWTE_MASK = 0x20;
+pub const UART_IE7816_BWTE_SHIFT = 5;
+pub const UART_IE7816_CWTE_MASK = 0x40;
+pub const UART_IE7816_CWTE_SHIFT = 6;
+pub const UART_IE7816_WTE_MASK = 0x80;
+pub const UART_IE7816_WTE_SHIFT = 7;
+// IS7816 Bit Fields
+pub const UART_IS7816_RXT_MASK = 0x1;
+pub const UART_IS7816_RXT_SHIFT = 0;
+pub const UART_IS7816_TXT_MASK = 0x2;
+pub const UART_IS7816_TXT_SHIFT = 1;
+pub const UART_IS7816_GTV_MASK = 0x4;
+pub const UART_IS7816_GTV_SHIFT = 2;
+pub const UART_IS7816_INITD_MASK = 0x10;
+pub const UART_IS7816_INITD_SHIFT = 4;
+pub const UART_IS7816_BWT_MASK = 0x20;
+pub const UART_IS7816_BWT_SHIFT = 5;
+pub const UART_IS7816_CWT_MASK = 0x40;
+pub const UART_IS7816_CWT_SHIFT = 6;
+pub const UART_IS7816_WT_MASK = 0x80;
+pub const UART_IS7816_WT_SHIFT = 7;
+// WP7816_T_TYPE0 Bit Fields
+pub const UART_WP7816_T_TYPE0_WI_MASK = 0xFF;
+pub const UART_WP7816_T_TYPE0_WI_SHIFT = 0;
+// WP7816_T_TYPE1 Bit Fields
+pub const UART_WP7816_T_TYPE1_BWI_MASK = 0xF;
+pub const UART_WP7816_T_TYPE1_BWI_SHIFT = 0;
+pub const UART_WP7816_T_TYPE1_CWI_MASK = 0xF0;
+pub const UART_WP7816_T_TYPE1_CWI_SHIFT = 4;
+// WN7816 Bit Fields
+pub const UART_WN7816_GTN_MASK = 0xFF;
+pub const UART_WN7816_GTN_SHIFT = 0;
+// WF7816 Bit Fields
+pub const UART_WF7816_GTFD_MASK = 0xFF;
+pub const UART_WF7816_GTFD_SHIFT = 0;
+// ET7816 Bit Fields
+pub const UART_ET7816_RXTHRESHOLD_MASK = 0xF;
+pub const UART_ET7816_RXTHRESHOLD_SHIFT = 0;
+pub const UART_ET7816_TXTHRESHOLD_MASK = 0xF0;
+pub const UART_ET7816_TXTHRESHOLD_SHIFT = 4;
+// TL7816 Bit Fields
+pub const UART_TL7816_TLEN_MASK = 0xFF;
+pub const UART_TL7816_TLEN_SHIFT = 0;
+
+//define UART_TWFIFO_TXWATER(x)                   (((uint8_t)(((uint8_t)(x))<<UART_TWFIFO_TXWATER_SHIFT))&UART_TWFIFO_TXWATER_MASK)
+//define UART_IR_TNP(x)                           (((uint8_t)(((uint8_t)(x))<<UART_IR_TNP_SHIFT))&UART_IR_TNP_MASK)
+//define UART_D_RT(x)                             (((uint8_t)(((uint8_t)(x))<<UART_D_RT_SHIFT))&UART_D_RT_MASK)
+//define UART_PFIFO_RXFIFOSIZE(x)                 (((uint8_t)(((uint8_t)(x))<<UART_PFIFO_RXFIFOSIZE_SHIFT))&UART_PFIFO_RXFIFOSIZE_MASK)
+//define UART_MA1_MA(x)                           (((uint8_t)(((uint8_t)(x))<<UART_MA1_MA_SHIFT))&UART_MA1_MA_MASK)
+//define UART_MA2_MA(x)                           (((uint8_t)(((uint8_t)(x))<<UART_MA2_MA_SHIFT))&UART_MA2_MA_MASK)
+//define UART_PFIFO_TXFIFOSIZE(x)                 (((uint8_t)(((uint8_t)(x))<<UART_PFIFO_TXFIFOSIZE_SHIFT))&UART_PFIFO_TXFIFOSIZE_MASK)
+//define UART_TCFIFO_TXCOUNT(x)                   (((uint8_t)(((uint8_t)(x))<<UART_TCFIFO_TXCOUNT_SHIFT))&UART_TCFIFO_TXCOUNT_MASK)
+//define UART_RWFIFO_RXWATER(x)                   (((uint8_t)(((uint8_t)(x))<<UART_RWFIFO_RXWATER_SHIFT))&UART_RWFIFO_RXWATER_MASK)
+//define UART_RCFIFO_RXCOUNT(x)                   (((uint8_t)(((uint8_t)(x))<<UART_RCFIFO_RXCOUNT_SHIFT))&UART_RCFIFO_RXCOUNT_MASK)
+//define UART_C4_BRFA(x)                          (((uint8_t)(((uint8_t)(x))<<UART_C4_BRFA_SHIFT))&UART_C4_BRFA_MASK)
+//define UART_BDL_SBR(x)                          (((uint8_t)(((uint8_t)(x))<<UART_BDL_SBR_SHIFT))&UART_BDL_SBR_MASK)
+//define UART_BDH_SBR(x)                          (((uint8_t)(((uint8_t)(x))<<UART_BDH_SBR_SHIFT))&UART_BDH_SBR_MASK)
+
+//define UART_WP7816_T_TYPE0_WI(x)                (((uint8_t)(((uint8_t)(x))<<UART_WP7816_T_TYPE0_WI_SHIFT))&UART_WP7816_T_TYPE0_WI_MASK)
+//define UART_WP7816_T_TYPE1_BWI(x)               (((uint8_t)(((uint8_t)(x))<<UART_WP7816_T_TYPE1_BWI_SHIFT))&UART_WP7816_T_TYPE1_BWI_MASK)
+//define UART_WP7816_T_TYPE1_CWI(x)               (((uint8_t)(((uint8_t)(x))<<UART_WP7816_T_TYPE1_CWI_SHIFT))&UART_WP7816_T_TYPE1_CWI_MASK)
+//define UART_WN7816_GTN(x)                       (((uint8_t)(((uint8_t)(x))<<UART_WN7816_GTN_SHIFT))&UART_WN7816_GTN_MASK)
+//define UART_WF7816_GTFD(x)                      (((uint8_t)(((uint8_t)(x))<<UART_WF7816_GTFD_SHIFT))&UART_WF7816_GTFD_MASK)
+//define UART_ET7816_RXTHRESHOLD(x)               (((uint8_t)(((uint8_t)(x))<<UART_ET7816_RXTHRESHOLD_SHIFT))&UART_ET7816_RXTHRESHOLD_MASK)
+//define UART_ET7816_TXTHRESHOLD(x)               (((uint8_t)(((uint8_t)(x))<<UART_ET7816_TXTHRESHOLD_SHIFT))&UART_ET7816_TXTHRESHOLD_MASK)
+//define UART_TL7816_TLEN(x)                      (((uint8_t)(((uint8_t)(x))<<UART_TL7816_TLEN_SHIFT))&UART_TL7816_TLEN_MASK)
 
 // SOPT1 Bit Fields
 pub const SIM_SOPT1_RAMSIZE_MASK = 0xF000;
@@ -473,6 +724,8 @@ pub var GpioE align(32) = @intToPtr(*volatile Gpio, 0x400FF100);
 
 pub var System = SystemStruct{};
 pub var Uart0 = @intToPtr(*volatile UartMemMap, 0x4006A000);
+pub var Uart1 = @intToPtr(*volatile UartMemMap, 0x4006B000);
+pub var Uart2 = @intToPtr(*volatile UartMemMap, 0x4006C000);
 pub var OscillatorControl = @intToPtr(*volatile u8, 0x40065000);
 pub var ClockGenerator = @intToPtr(*volatile MultiPurposeClockGenerator, 0x40064000);
 pub var RegolatorStatusAndControl = @intToPtr(*volatile u8, 0x4007D002); // PMC_REGSC

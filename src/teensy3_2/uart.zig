@@ -10,7 +10,8 @@ pub const Uart = struct {
         failed_to_read,
     };
 
-    pub const OutStream = io.OutStream(Self, Error, Self.put_string);
+    pub const OutStream = io.OutStream(Self, Error, Self.write_string);
+    pub const InStream = io.InStream(Self, Error, Self.read_string);
 
     pub fn new() Self {
         Self.setup();
@@ -20,7 +21,6 @@ pub const Uart = struct {
     pub fn setup() void {
         cpu.PortB.controlRegister[16] = cpu.port_pcr_mux(3);
         cpu.PortB.controlRegister[17] = cpu.port_pcr_mux(3);
-        //SIM_SCGC4.* |= cpu.SIM_SCGC4_UART0_MASK;
         cpu.System.ClockGating4.* |= cpu.SIM_SCGC4_UART0_MASK;
 
         // Set defaults (8bit no parity)
@@ -40,23 +40,24 @@ pub const Uart = struct {
         cpu.Uart0.BDL = cpu.uart_bdl_sbr(divisor);
         cpu.Uart0.C4 = cpu.uart_c4_brfa(brfa);
 
-        // Enable Tx
-        cpu.Uart0.C2 = cpu.UART_C2_TE_MASK;
+        // Enable Tx and Rx
+        cpu.Uart0.C2 = cpu.UART_C2_TE_MASK | cpu.UART_C2_RE_MASK;
     }
 
-    fn put_string(self: Self, string: []const u8) Error!usize {
+    fn write_string(self: Self, string: []const u8) Error!usize {
         for (string) |value| {
             if (value == '\n') {
-                Self.put_char('\r');
+                Self.write_char('\r');
             }
-            Self.put_char(value);
+            Self.write_char(value);
         }
         return string.len;
     }
 
-    fn put_char(ch: u8) void {
+    fn write_char(ch: u8) void {
         // Wait until space is available
-        while ((cpu.Uart0.S1 & cpu.UART_S1_TDRE_MASK) == 0) {
+        while ((cpu.Uart0.S1 & cpu.UART_S1_TDRE_MASK) == 0)
+        {
             cpu.nop();
         }
 
@@ -64,7 +65,30 @@ pub const Uart = struct {
         cpu.Uart0.D = ch;
     }
 
+    fn read_char() u8 {
+        // Wait until character is recived
+        while ((cpu.Uart0.S1 & cpu.UART_S1_RDRF_MASK) == 0) {
+            cpu.nop();
+        }
+
+        // Read char
+        return cpu.Uart0.D;
+    }
+
+    fn read_string(self: Self, buffer: []u8) Error!usize {
+        for (buffer) |value, index| {
+            var char = Self.read_char();
+            buffer[index] = char;
+        }
+
+        return buffer.len;
+    }
+
     pub fn get_out_stream(self: Self) OutStream {
         return OutStream{ .context = self };
+    }
+
+    pub fn get_in_stream(self: Self) InStream {
+        return InStream{ .context = self };
     }
 };
