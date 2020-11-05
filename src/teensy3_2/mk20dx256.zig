@@ -594,7 +594,7 @@ pub const MCG_S_LOCK0_SHIFT = 6;
 pub const MCG_S_LOLS0_MASK = 0x80;
 pub const MCG_S_LOLS0_SHIFT = 7;
 
-const Port = struct {
+pub const Port = struct {
     controlRegister: [32]u32, // PCR 0-31
     globalPinControlLow: u32, // GPCLR
     globalPinControlHigh: u32, // GPCHR
@@ -602,7 +602,7 @@ const Port = struct {
     interuptStatusFlag: u32, // ISFR
 };
 
-const Gpio = struct {
+pub const Gpio = struct {
     dataOutput: u32, // PDOR
     setOutput: u32, // PSOR
     clearOutput: u32, // PCOR
