@@ -25,6 +25,14 @@ pub const uart = {
     }
 };
 
+pub const systick = {
+    if (teensy3_2) {
+        return @import("teensy3_2/systick.zig");
+    } else {
+        return {};
+    }
+};
+
 pub const start = {
     if (teensy3_2) {
         return @import("teensy3_2/startup.zig");
@@ -35,7 +43,7 @@ pub const start = {
 
 const main = @import("main.zig");
 
-export fn __startup() linksection(".startup") noreturn {
+export fn _start() linksection(".startup") noreturn {
     start.setup();
     main.main();
 }

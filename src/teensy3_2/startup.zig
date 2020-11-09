@@ -3,9 +3,10 @@ const c = @cImport(@cInclude("startup.h"));
 const cpu = @import("mk20dx256.zig");
 const interrupt = @import("interrupt.zig");
 const config = @import("config.zig");
+const Systick = @import("systick.zig");
 
 extern fn _eram() void;
-extern fn __startup() void;
+extern fn _start() void;
 
 extern var _etext: usize;
 extern var _sdata: usize;
@@ -14,9 +15,9 @@ extern var _edata: usize;
 extern var _sbss: usize;
 extern var _ebss: usize;
 
-export const interrupt_vectors linksection(".vectors") = [_]extern fn () void{
+export const interrupt_vectors linksection(".vectors") = [_]fn () callconv(.C) void{
     _eram,
-    __startup,
+    _start,
     interrupt.isr_non_maskable,
     interrupt.isr_hard_fault,
     interrupt.isr_memmanage_fault,
@@ -270,6 +271,8 @@ pub fn setup() void {
 
     var bss = @intToPtr([*]u8, _sbss);
     @memset(bss, 0, _ebss - _sbss);
+
+    Systick.init();
 
     interrupt.interrupt_enable();
 }

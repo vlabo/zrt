@@ -1,21 +1,5 @@
 const cpu = @import("mk20dx256.zig");
 
-// 0 -> B16
-// 1 -> B17
-// 2 -> D0
-// 3 -> A12
-// 4 -> A13
-// 5 -> D7
-// 6 -> D4
-// 7 -> D2
-// 8 -> D3
-// 9 -> C3
-// 10 -> C4
-// 11 -> C6
-// 12 -> C7
-// 13 -> C5
-// 14 -> D1
-
 const Bank = enum {
     A, B, C, D, E
 };
@@ -113,21 +97,23 @@ pub const Output = struct {
 };
 
 pub const Input = struct {
-    input: IO,
+    shift: u5,
+    gpio: *volatile cpu.Gpio,
 
     const Self = @This();
 
     pub fn new(pin: u5) Self {
         var input = IoMap[pin];
         const one: u32 = 1;
-        get_gpio(input.bank).dataDirection &= ~(one << input.shift);
+        var gpio = get_gpio(input.bank);
+        gpio.dataDirection &= ~(one << input.shift);
         get_port(input.bank).controlRegister[input.shift] = cpu.port_pcr_mux(1);
 
-        return Self{ .input = input };
+        return Self{ .shift = input.shift, .gpio = gpio};
     }
 
     pub fn read(self: Self) bool {
         const one: u32 = 1;
-        return get_gpio(self.input.bank).dataInput == (one << self.input.shift);
+        return self.gpio.dataInput == (one << self.shift);
     }
 };

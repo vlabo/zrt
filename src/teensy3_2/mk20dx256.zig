@@ -594,6 +594,32 @@ pub const MCG_S_LOCK0_SHIFT = 6;
 pub const MCG_S_LOLS0_MASK = 0x80;
 pub const MCG_S_LOLS0_SHIFT = 7;
 
+
+// SysTick Register Masks
+
+// CSR Bit Fields
+pub const SysTick_CSR_ENABLE_MASK = 0x1;
+pub const SysTick_CSR_ENABLE_SHIFT = 0;
+pub const SysTick_CSR_TICKINT_MASK = 0x2;
+pub const SysTick_CSR_TICKINT_SHIFT = 1;
+pub const SysTick_CSR_CLKSOURCE_MASK = 0x4;
+pub const SysTick_CSR_CLKSOURCE_SHIFT = 2;
+pub const SysTick_CSR_COUNTFLAG_MASK = 0x10000;
+pub const SysTick_CSR_COUNTFLAG_SHIFT = 16;
+// RVR Bit Fields
+pub const SysTick_RVR_RELOAD_MASK = 0xFFFFFF;
+pub const SysTick_RVR_RELOAD_SHIFT = 0;
+// CVR Bit Fields
+pub const SysTick_CVR_CURRENT_MASK = 0xFFFFFF;
+pub const SysTick_CVR_CURRENT_SHIFT = 0;
+// CALIB Bit Fields
+pub const SysTick_CALIB_TENMS_MASK = 0xFFFFFF;
+pub const SysTick_CALIB_TENMS_SHIFT = 0;
+pub const SysTick_CALIB_SKEW_MASK = 0x40000000;
+pub const SysTick_CALIB_SKEW_SHIFT = 30;
+pub const SysTick_CALIB_NOREF_MASK = 0x80000000;
+pub const SysTick_CALIB_NOREF_SHIFT = 31;
+
 pub const Port = struct {
     controlRegister: [32]u32, // PCR 0-31
     globalPinControlLow: u32, // GPCLR
@@ -710,6 +736,13 @@ const WatchdogStruct = struct {
     prescaler: u16, // WDOG_PRESC
 };
 
+pub const SysTick_MemMap = struct {
+   CSR: u32,                                    // < SysTick Control and Status Register, offset: 0x0
+   RVR: u32,                                    // < SysTick Reload Value Register, offset: 0x4
+   CVR: u32,                                    // < SysTick Current Value Register, offset: 0x8
+   CALIB: u32,                                  // < SysTick Calibration Value Register, offset: 0xC
+};
+
 pub var PortA align(32) = @intToPtr(*volatile Port, 0x40049000);
 pub var PortB align(32) = @intToPtr(*volatile Port, 0x4004A000);
 pub var PortC align(32) = @intToPtr(*volatile Port, 0x4004B000);
@@ -733,6 +766,8 @@ pub var RegolatorStatusAndControl = @intToPtr(*volatile u8, 0x4007D002); // PMC_
 pub var Power = @intToPtr(*volatile PowerStruct, 0x4007E000);
 
 pub var Watchdog = @intToPtr(*volatile WatchdogStruct, 0x40052000);
+
+pub var SysTick = @intToPtr(*volatile SysTick_MemMap, 0xE000E010);
 
 pub fn port_pcr_mux(comptime x: comptime_int) comptime_int {
     return left_shift_and_mask(x, PORT_PCR_MUX_SHIFT, PORT_PCR_MUX_MASK);
@@ -885,6 +920,16 @@ pub fn sim_sopt4_ftm1ch0src(comptime x: comptime_int) comptime_int {
 }
 pub fn sim_sopt4_ftm2ch0src(comptime x: comptime_int) comptime_int {
     return left_shift_and_mask(x, SIM_SOPT4_FTM2CH0SRC_SHIFT, SIM_SOPT4_FTM2CH0SRC_MASK);
+}
+
+pub fn systick_rvr_reload(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, SysTick_RVR_RELOAD_SHIFT, SysTick_RVR_RELOAD_MASK);
+}
+pub fn systick_cvr_current(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, SysTick_CVR_CURRENT_SHIFT, SysTick_CVR_CURRENT_MASK);
+}
+pub fn systick_calib_tenms(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, SysTick_CALIB_TENMS_SHIFT, SysTick_CALIB_TENMS_MASK);
 }
 
 fn left_shift_and_mask(comptime x: comptime_int, comptime shift: u5, comptime mask: u32) comptime_int {
