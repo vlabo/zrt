@@ -1,7 +1,6 @@
 const cpu = @import("mk20dx256.zig");
 const io = @import("std").io;
 
-
 pub const Uart = struct {
     const Self = @This();
 
@@ -56,8 +55,7 @@ pub const Uart = struct {
 
     fn write_char(ch: u8) void {
         // Wait until space is available
-        while ((cpu.Uart0.S1 & cpu.UART_S1_TDRE_MASK) == 0)
-        {
+        while ((cpu.Uart0.S1 & cpu.UART_S1_TDRE_MASK) == 0) {
             cpu.nop();
         }
 

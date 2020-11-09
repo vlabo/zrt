@@ -594,7 +594,6 @@ pub const MCG_S_LOCK0_SHIFT = 6;
 pub const MCG_S_LOLS0_MASK = 0x80;
 pub const MCG_S_LOLS0_SHIFT = 7;
 
-
 // SysTick Register Masks
 
 // CSR Bit Fields
@@ -673,28 +672,28 @@ const UartMemMap = struct {
 };
 
 pub const SystemStruct = struct {
-    Options1 : *volatile u32 = @intToPtr(*volatile u32, 0x40047000), // SIM_SOPT1
-    Options1ConfigurationRegister : *volatile u32 = @intToPtr(*volatile u32, 0x40047004), // SIM_SOPT1CFG
-    Options2 : *volatile u32 = @intToPtr(*volatile u32, 0x40048004), // SIM_SOPT2
-    Options4 : *volatile u32 = @intToPtr(*volatile u32, 0x4004800C), // SIM_SOPT4
-    Options5 : *volatile u32 = @intToPtr(*volatile u32, 0x40048010), // SIM_SOPT5
-    Options7 : *volatile u32 = @intToPtr(*volatile u32, 0x40048018), // SIM_SOPT7
-    DeviceIdentification : *volatile u32 = @intToPtr(*volatile u32, 0x40048024), // SIM_SDID
-    ClockGating1 : *volatile u32 = @intToPtr(*volatile u32, 0x40048028), // SIM_SCGC1
-    ClockGating2 : *volatile u32 = @intToPtr(*volatile u32, 0x4004802C), // SIM_SCGC2
-    ClockGating3 : *volatile u32 = @intToPtr(*volatile u32, 0x40048030), // SIM_SCGC3
-    ClockGating4 : *volatile u32 = @intToPtr(*volatile u32, 0x40048034), // SIM_SCGC4
-    ClockGating5 : *volatile u32 = @intToPtr(*volatile u32, 0x40048038), // SIM_SCGC5
-    ClockGating6 : *volatile u32 = @intToPtr(*volatile u32, 0x4004803C), // SIM_SCGC6
-    ClockGating7 : *volatile u32 = @intToPtr(*volatile u32, 0x40048040), // SIM_SCGC7
-    ClockDevider1 : *volatile u32 = @intToPtr(*volatile u32, 0x40048044), // SIM_CLKDIV1
-    ClockDevider2 : *volatile u32 = @intToPtr(*volatile u32, 0x40048048), // SIM_CLKDIV2
-    FlashConfiguration1 : *volatile u32 = @intToPtr(*volatile u32, 0x4004804C), // SIM_FCFG1
-    FlashConfiguration2 : *volatile u32 = @intToPtr(*volatile u32, 0x40048050), // SIM_FCFG2
-    UniqueIdentificationHigh : *volatile u32 = @intToPtr(*volatile u32, 0x40048054), // SIM_UIDH
-    UniqueIdentificationMidHigh : *volatile u32 = @intToPtr(*volatile u32, 0x40048058), // SIM_UIDMH
-    UniqueIdentificationMidLow : *volatile u32 = @intToPtr(*volatile u32, 0x4004805C), // SIM_UIDML
-    UniqueIdentificationLow : *volatile u32 = @intToPtr(*volatile u32, 0x40048060), // SIM_UIDL
+    Options1: *volatile u32 = @intToPtr(*volatile u32, 0x40047000), // SIM_SOPT1
+    Options1ConfigurationRegister: *volatile u32 = @intToPtr(*volatile u32, 0x40047004), // SIM_SOPT1CFG
+    Options2: *volatile u32 = @intToPtr(*volatile u32, 0x40048004), // SIM_SOPT2
+    Options4: *volatile u32 = @intToPtr(*volatile u32, 0x4004800C), // SIM_SOPT4
+    Options5: *volatile u32 = @intToPtr(*volatile u32, 0x40048010), // SIM_SOPT5
+    Options7: *volatile u32 = @intToPtr(*volatile u32, 0x40048018), // SIM_SOPT7
+    DeviceIdentification: *volatile u32 = @intToPtr(*volatile u32, 0x40048024), // SIM_SDID
+    ClockGating1: *volatile u32 = @intToPtr(*volatile u32, 0x40048028), // SIM_SCGC1
+    ClockGating2: *volatile u32 = @intToPtr(*volatile u32, 0x4004802C), // SIM_SCGC2
+    ClockGating3: *volatile u32 = @intToPtr(*volatile u32, 0x40048030), // SIM_SCGC3
+    ClockGating4: *volatile u32 = @intToPtr(*volatile u32, 0x40048034), // SIM_SCGC4
+    ClockGating5: *volatile u32 = @intToPtr(*volatile u32, 0x40048038), // SIM_SCGC5
+    ClockGating6: *volatile u32 = @intToPtr(*volatile u32, 0x4004803C), // SIM_SCGC6
+    ClockGating7: *volatile u32 = @intToPtr(*volatile u32, 0x40048040), // SIM_SCGC7
+    ClockDevider1: *volatile u32 = @intToPtr(*volatile u32, 0x40048044), // SIM_CLKDIV1
+    ClockDevider2: *volatile u32 = @intToPtr(*volatile u32, 0x40048048), // SIM_CLKDIV2
+    FlashConfiguration1: *volatile u32 = @intToPtr(*volatile u32, 0x4004804C), // SIM_FCFG1
+    FlashConfiguration2: *volatile u32 = @intToPtr(*volatile u32, 0x40048050), // SIM_FCFG2
+    UniqueIdentificationHigh: *volatile u32 = @intToPtr(*volatile u32, 0x40048054), // SIM_UIDH
+    UniqueIdentificationMidHigh: *volatile u32 = @intToPtr(*volatile u32, 0x40048058), // SIM_UIDMH
+    UniqueIdentificationMidLow: *volatile u32 = @intToPtr(*volatile u32, 0x4004805C), // SIM_UIDML
+    UniqueIdentificationLow: *volatile u32 = @intToPtr(*volatile u32, 0x40048060), // SIM_UIDL
 };
 
 const MultiPurposeClockGenerator = struct {
@@ -737,10 +736,10 @@ const WatchdogStruct = struct {
 };
 
 pub const SysTick_MemMap = struct {
-   CSR: u32,                                    // < SysTick Control and Status Register, offset: 0x0
-   RVR: u32,                                    // < SysTick Reload Value Register, offset: 0x4
-   CVR: u32,                                    // < SysTick Current Value Register, offset: 0x8
-   CALIB: u32,                                  // < SysTick Calibration Value Register, offset: 0xC
+    CSR: u32, // < SysTick Control and Status Register, offset: 0x0
+    RVR: u32, // < SysTick Reload Value Register, offset: 0x4
+    CVR: u32, // < SysTick Current Value Register, offset: 0x8
+    CALIB: u32, // < SysTick Calibration Value Register, offset: 0xC
 };
 
 pub var PortA align(32) = @intToPtr(*volatile Port, 0x40049000);

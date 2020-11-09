@@ -12,8 +12,8 @@ extern var _etext: usize;
 extern var _sdata: usize;
 extern var _edata: usize;
 
-extern var _sbss: usize;
-extern var _ebss: usize;
+extern var _sbss: u8;
+extern var _ebss: u8;
 
 export const interrupt_vectors linksection(".vectors") = [_]fn () callconv(.C) void{
     _eram,
@@ -181,7 +181,6 @@ pub fn setup() void {
     // we're in high-frequency mode, also enable capacitors
     cpu.OscillatorControl.* = cpu.OSC_CR_SC8P_MASK | cpu.OSC_CR_SC2P_MASK; // TODO This does not actually seem enable the ext crystal
 
-
     // Set MCG to very high frequency crystal and request oscillator. We have
     // to do this first so that the divisor will be correct (512 and not 16)
     cpu.ClockGenerator.control2 = cpu.mcg_c2_range0(2) | cpu.MCG_C2_EREFS0_MASK;
@@ -269,8 +268,8 @@ pub fn setup() void {
         cpu.System.Options2.* = cpu.SIM_SOPT2_USBSRC_MASK | cpu.SIM_SOPT2_PLLFLLSEL_MASK | cpu.SIM_SOPT2_TRACECLKSEL_MASK | cpu.sim_sopt2_clkoutsel(6);
     }
 
-    var bss = @intToPtr([*]u8, _sbss);
-    @memset(bss, 0, _ebss - _sbss);
+    var bss = @ptrCast([*]u8, &_sbss);
+    @memset(bss, 0, @ptrToInt(&_ebss) - @ptrToInt(&_sbss));
 
     Systick.init();
 
