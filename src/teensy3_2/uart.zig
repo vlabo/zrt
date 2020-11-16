@@ -1,6 +1,8 @@
 const cpu = @import("mk20dx256.zig");
 const io = @import("std").io;
 
+var setup_complete = false;
+
 pub const Uart = struct {
     const Self = @This();
 
@@ -13,7 +15,9 @@ pub const Uart = struct {
     pub const InStream = io.InStream(Self, Error, Self.read_string);
 
     pub fn new() Self {
-        Self.setup();
+        if (!setup_complete) {
+            Self.setup();
+        }
         return Self{};
     }
 

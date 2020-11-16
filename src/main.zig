@@ -7,6 +7,7 @@ const Systick = zrt.systick;
 extern var _sbss: u8;
 extern var _ebss: u8;
 pub fn main() noreturn {
+    asm volatile ("SVC 0");
     var uart = Uart.new();
     var out = uart.get_out_stream();
     var in = uart.get_in_stream();
@@ -16,7 +17,14 @@ pub fn main() noreturn {
 
     out.print("bss: {} - {} = {}\n", .{ @ptrToInt(&_ebss), @ptrToInt(&_sbss), @ptrToInt(&_ebss) - @ptrToInt(&_sbss) }) catch {};
 
+    var value = asm volatile ("mov %[value], lr"
+        : [value] "=r" (-> usize)
+    );
+    out.print("main: 0x{x} \n", .{value}) catch {};
+
     while (true) {
-        time.delay(100);
+        time.delay(1000);
+        // time.trigger_pendsv();
+        out.print("ss \n", .{}) catch {};
     }
 }

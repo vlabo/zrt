@@ -38,6 +38,7 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
 
     const hex = b.step("hex", "Convert to hex");
     const upload = b.step("upload", "Upload");
+    const dis = b.step("dis", "Disassembly");
 
     var objcopy_args = std.ArrayList([]const u8).init(b.allocator);
     try objcopy_args.appendSlice(&[_][]const u8{
@@ -65,4 +66,15 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     const teensy_upload = b.addSystemCommand(teensy_upload_args.items);
     teensy_upload.step.dependOn(&create_hex.step);
     upload.dependOn(&teensy_upload.step);
+
+
+    var disassembly_args = std.ArrayList([]const u8).init(b.allocator);
+    try disassembly_args.appendSlice(&[_][]const u8{
+        "objdump",
+        "-d",
+        "zig-cache/firmware",
+    });
+    const disassembly = b.addSystemCommand(disassembly_args.items);
+    disassembly.step.dependOn(&firmware.step);
+    dis.dependOn(&disassembly.step);
 }

@@ -41,9 +41,9 @@ pub const start = {
     }
 };
 
-const main = @import("main.zig");
+const entry = @import("main.zig");
 
 export fn _start() linksection(".startup") noreturn {
     start.setup();
-    main.main();
+    entry.main();
 }

@@ -1,6 +1,6 @@
 const Systick = @import("systick.zig");
 
-pub fn interrupt_enable() void {
+pub fn enable() void {
     asm volatile ("CPSIE i"
         :
         :
@@ -8,7 +8,7 @@ pub fn interrupt_enable() void {
     );
 }
 
-pub fn interrupt_disable() void {
+pub fn disable() void {
     asm volatile ("CPSID i"
         :
         :
@@ -28,10 +28,10 @@ pub const isr_memmanage_fault: fn () callconv(.C) void = isr_panic;
 pub const isr_bus_fault: fn () callconv(.C) void = isr_panic;
 pub const isr_usage_fault: fn () callconv(.C) void = isr_panic;
 
-pub const isr_svcall: fn () callconv(.C) void = isr_ignore;
+pub const isr_svcall: fn () callconv(.C) void = Systick.svc_handler;
 pub const isr_debug_monitor: fn () callconv(.C) void = isr_ignore;
 
-pub const isr_pendablesrvreq: fn () callconv(.C) void = isr_ignore;
+pub const isr_pendablesrvreq: fn () callconv(.C) void = Systick.sv_isr;
 pub const isr_systick: fn () callconv(.C) void = Systick.isr;
 pub const isr_dma_ch0_complete: fn () callconv(.C) void = isr_ignore;
 pub const isr_dma_ch1_complete: fn () callconv(.C) void = isr_ignore;
