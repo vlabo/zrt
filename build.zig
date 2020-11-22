@@ -57,7 +57,8 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
 
     var teensy_upload_args = std.ArrayList([]const u8).init(b.allocator);
     try teensy_upload_args.appendSlice(&[_][]const u8{
-        "./teensy_loader_cli",
+        "sudo",
+        "./uploader",
         "--mcu=mk20dx256",
         "-w",
         "output.hex",

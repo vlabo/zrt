@@ -1,4 +1,4 @@
 .vscode
 zig-cache
 output.hex
-teensy_loader_cli
+uploader
