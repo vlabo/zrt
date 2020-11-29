@@ -51,7 +51,6 @@ comptime {
 
 pub extern fn svc_handler() void;
 
-
 export fn test_task() noreturn {
     var led = gpio.Output.new(13);
     led.set_high();
@@ -113,15 +112,14 @@ fn createTask() void {
     var stackLen = stack.len;
 
     stackLen -= @sizeOf(HardwareStackFrame);
-    @memcpy(@ptrCast([*] u8, &stack[stackLen]), @ptrCast([*]const u8, &hwStack), @sizeOf(HardwareStackFrame));
+    @memcpy(@ptrCast([*]u8, &stack[stackLen]), @ptrCast([*]const u8, &hwStack), @sizeOf(HardwareStackFrame));
 
     stackLen -= @sizeOf(SoftwareStackFrame);
-    @memcpy(@ptrCast([*] u8, &stack[stackLen]), @ptrCast([*]const u8, &swStack), @sizeOf(SoftwareStackFrame));
+    @memcpy(@ptrCast([*]u8, &stack[stackLen]), @ptrCast([*]const u8, &swStack), @sizeOf(SoftwareStackFrame));
 
     stackPointer = @ptrToInt(&stack[stackLen]);
 
     // out.print("{x}\n", .{stackPointer}) catch {};
     // var curr_stack = @intToPtr([*]u8, stackPointer);
     // out.print("{x}\n", .{stack}) catch {};
-
 }

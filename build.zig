@@ -30,8 +30,9 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
         .os_tag = .freestanding,
         .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_m4 },
     };
-
+    // const lib_cflags = &[_][]const u8{ "-Wall", "-Os", "-mthumb", "-ffunction-sections", "-fdata-sections", "-nostdlib" };
     firmware.setTarget(target);
+    // firmware.addCSourceFile("src/c/TeensyThreads-asm.S", lib_cflags);
     firmware.setLinkerScriptPath("src/teensy3_2/link/mk20dx256.ld");
     firmware.setOutputDir("zig-cache");
     firmware.setBuildMode(builtin.Mode.ReleaseSmall);
@@ -58,7 +59,9 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
 
     var teensy_upload_args = std.ArrayList([]const u8).init(b.allocator);
     try teensy_upload_args.appendSlice(&[_][]const u8{
-        "./teensy_loader_cli",
+        "sudo",
+        "./uploader",
+        "-v",
         "--mcu=mk20dx256",
         "-w",
         "output.hex",
@@ -66,7 +69,6 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     const teensy_upload = b.addSystemCommand(teensy_upload_args.items);
     teensy_upload.step.dependOn(&create_hex.step);
     upload.dependOn(&teensy_upload.step);
-
 
     var disassembly_args = std.ArrayList([]const u8).init(b.allocator);
     try disassembly_args.appendSlice(&[_][]const u8{
