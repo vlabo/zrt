@@ -2,6 +2,8 @@ const build_options = @import("build_options");
 const teensy3_2 = build_options.teensy3_2;
 const raspberry = build_options.raspberry;
 
+const UT = @import("uart.zig");
+
 pub const gpio = {
     if (teensy3_2) {
         return @import("teensy3_2/gpio.zig");
@@ -32,6 +34,8 @@ pub const uart = {
     }
 };
 
+pub const Uart = UT.UartTemplate(uart.setup, uart.read_char, uart.write_char);
+
 pub const systick = {
     if (teensy3_2) {
         return @import("teensy3_2/systick.zig");
@@ -42,7 +46,7 @@ pub const systick = {
     }
 };
 
-pub const start = {
+const start = {
     if (teensy3_2) {
         return @import("teensy3_2/startup.zig");
     } else if (raspberry) {
@@ -64,17 +68,7 @@ pub const cpu = {
 
 const main = @import("main.zig");
 
-export fn _start() linksection(".text.boot") callconv(.Naked) noreturn {
-    if (raspberry) {
-        if (cpu.get_cpu_id() & 0x3 != 0) {
-            cpu.wfi();
-        }
-        asm volatile (
-            \\ ldr     x1, =_start
-            \\ mov     sp, x1
-        );
-    }
-
-    start.setup();
+pub export fn zrt_start() noreturn {
+    _ = start.setup();
     main.main();
 }

@@ -6,7 +6,6 @@ const config = @import("config.zig");
 const Systick = @import("systick.zig");
 
 extern fn _eram() void;
-extern fn _start() void;
 
 extern var _etext: usize;
 extern var _sdata: usize;
@@ -145,7 +144,7 @@ export const flashconfigbytes: [16]u8 linksection(".flashconfig") = [_]u8{
     0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF,
 };
 
-pub fn setup() void {
+pub fn setup() bool {
     // The CPU has a watchdog feature which is on by default,
     // so we have to configure it to not have nasty reset-surprises
     // later on.
@@ -274,4 +273,11 @@ pub fn setup() void {
     Systick.init();
 
     interrupt.interrupt_enable();
+    return true;
+}
+
+extern fn zrt_start() noreturn;
+
+export fn _start() linksection(".startup") noreturn {
+    zrt_start();
 }
