@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Copyright (c) 2020 Vladimir Stoilov <vladimir.stoilov@protonmail.com>
+// Copyright (c) 2021 Vladimir Stoilov 
 
 /// https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
 const mmio = @import("mmio.zig");

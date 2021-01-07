@@ -1,8 +1,7 @@
 const zrt = @import("zrt.zig");
 const gpio = zrt.gpio;
-const time = zrt.time;
+const time = zrt.Time;
 const Uart = zrt.Uart;
-const Systick = zrt.systick;
 
 pub fn main() noreturn {
     var uart = Uart.new() catch {
@@ -13,6 +12,6 @@ pub fn main() noreturn {
 
     while (true) {
         out.print("Hello\n", .{}) catch {};
-        time.delay(100);
+        time.sleep_ms(100);
     }
 }

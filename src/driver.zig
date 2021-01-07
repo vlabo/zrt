@@ -52,3 +52,14 @@ pub fn UartTemplate(comptime setup: fn () bool, comptime read_char: fn () u8, co
         }
     };
 }
+
+pub fn TimeTemplate(comptime sleep_ms: fn (ms: u64) void) type {
+    return struct {
+        pub fn sleep_ms(ms: u64) void {
+            sleep_ms(ms);
+        }
+        pub fn sleep_s(s: u64) void {
+            sleep_ms(s * 1000);
+        }
+    };
+}

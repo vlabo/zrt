@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 //
-// Copyright (c) 2020 Vladimir Stoilov <vladimir.stoilov@protonmail.com>
+// Copyright (c) 2021 Vladimir Stoilov
 
 const AtomicOrder = @import("builtin").AtomicOrder;
 

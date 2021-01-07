@@ -2,7 +2,27 @@ const build_options = @import("build_options");
 const teensy3_2 = build_options.teensy3_2;
 const raspberry = build_options.raspberry;
 
-const UT = @import("uart.zig");
+const Driver = @import("driver.zig");
+
+const time = {
+    if (teensy3_2) {
+        return @import("teensy3_2/time.zig");
+    } else if (raspberry) {
+        return @import("raspberry/time.zig");
+    } else {
+        return {};
+    }
+};
+
+const uart = {
+    if (teensy3_2) {
+        return @import("teensy3_2/uart.zig");
+    } else if (raspberry) {
+        return @import("raspberry/uart.zig");
+    } else {
+        return {};
+    }
+};
 
 pub const gpio = {
     if (teensy3_2) {
@@ -13,28 +33,6 @@ pub const gpio = {
         return {};
     }
 };
-
-pub const time = {
-    if (teensy3_2) {
-        return @import("teensy3_2/time.zig");
-    } else if (raspberry) {
-        return @import("raspberry/time.zig");
-    } else {
-        return {};
-    }
-};
-
-pub const uart = {
-    if (teensy3_2) {
-        return @import("teensy3_2/uart.zig");
-    } else if (raspberry) {
-        return @import("raspberry/uart.zig");
-    } else {
-        return {};
-    }
-};
-
-pub const Uart = UT.UartTemplate(uart.setup, uart.read_char, uart.write_char);
 
 pub const systick = {
     if (teensy3_2) {
@@ -65,6 +63,9 @@ pub const cpu = {
         return {};
     }
 };
+
+pub const Time = Driver.TimeTemplate(time.sleep_ms);
+pub const Uart = Driver.UartTemplate(uart.setup, uart.read_char, uart.write_char);
 
 const main = @import("main.zig");
 
