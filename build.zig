@@ -25,6 +25,8 @@ pub fn build(b: *Builder) !void {
 fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     try stdout.print("Building for teensy 3.2\n", .{});
 
+    firmware.addCSourceFile("src/c/task.c", &[_][]const u8{});
+
     const target = CrossTarget{
         .cpu_arch = .thumb,
         .os_tag = .freestanding,

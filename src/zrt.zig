@@ -25,13 +25,13 @@ pub const uart = {
     }
 };
 
-pub const systick = {
-    if (teensy3_2) {
-        return @import("teensy3_2/systick.zig");
-    } else {
-        return {};
-    }
-};
+// pub const systick = {
+//     if (teensy3_2) {
+//         return @import("teensy3_2/systick.zig");
+//     } else {
+//         return {};
+//     }
+// };
 
 pub const start = {
     if (teensy3_2) {

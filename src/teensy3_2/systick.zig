@@ -10,9 +10,9 @@ var out: Uart.OutStream = undefined;
 pub fn init() void {
     var uart = Uart.new();
     out = uart.get_out_stream();
-    cpu.SysTick.RVR = @enumToInt(Config.frequancy) / 10;
-    cpu.SysTick.CSR = cpu.SysTick_CSR_ENABLE_MASK | cpu.SysTick_CSR_TICKINT_MASK | cpu.SysTick_CSR_CLKSOURCE_MASK;
-    cpu.SystemControl.ICSR = 0x10000000;
+    // cpu.SysTick.RVR = @enumToInt(Config.frequancy) / 10;
+    // cpu.SysTick.CSR = cpu.SysTick_CSR_ENABLE_MASK | cpu.SysTick_CSR_TICKINT_MASK | cpu.SysTick_CSR_CLKSOURCE_MASK;
+    // cpu.SystemControl.ICSR = 0x10000000;
     createTask();
     out.print("createTask\n", .{}) catch {};
 }
@@ -21,19 +21,25 @@ pub fn systick_get_ms() u32 {
     return systick_ticks * (1000 / 10) + (@enumToInt(Config.frequancy) / 10 - (cpu.SysTick_CVR_CURRENT_MASK & cpu.SysTick.CVR)) / (@enumToInt(Config.frequancy) / 1000);
 }
 
-pub export fn isr() void {
+pub extern fn svc_handler() void;
+// {
+//     out.print("{x}\n", .{stackPointer}) catch {};
+//     var curr_stack = @intToPtr([*]u8, stackPointer);
+//     out.print("{x}\n", .{stack}) catch {};
+// }
+// {
     //cpu.SystemControl.ICSR = 0x10000000;
     // var value = asm volatile ("mov %[value], lr"
     //     : [value] "=r" (-> usize)
     // );
     // out.print("0x{x} \n", .{value}) catch {};
-}
+//}
 
-pub export fn sv_isr() void {
+pub export fn isr() void {
     var value = asm volatile ("mov %[value], lr"
         : [value] "=r" (-> usize)
     );
-    out.print("0x{x} \n", .{value}) catch {};
+    out.print("sv_isr: 0x{x} \n", .{value}) catch {};
 }
 
 comptime {
@@ -42,16 +48,18 @@ comptime {
         \\svc_handler:
         \\ cpsid i
         \\ ldr r0, =stackPointer
+        \\ ldr r0, [r0]
         \\ ldmia r0!, {r4-r11, lr}
+        \\ orr lr, lr, #0b100
         \\ msr psp, r0
         \\ cpsie i
         \\ bx lr
     );
 }
 
-pub extern fn svc_handler() void;
+pub export fn sv_isr() void {}
 
-export fn test_task() noreturn {
+pub export fn test_task() noreturn {
     var led = gpio.Output.new(13);
     led.set_high();
     while (true) {
@@ -107,7 +115,7 @@ fn createTask() void {
         .R9 = 9,
         .R10 = 10,
         .R11 = 11,
-        .LR = 0xFFFFFFFD,
+        .LR = 0xFFFFFFF9,
     };
     var stackLen = stack.len;
 
@@ -118,6 +126,7 @@ fn createTask() void {
     @memcpy(@ptrCast([*]u8, &stack[stackLen]), @ptrCast([*]const u8, &swStack), @sizeOf(SoftwareStackFrame));
 
     stackPointer = @ptrToInt(&stack[stackLen]);
+    out.print("{d}\n", .{stack[stackLen]}) catch {};
 
     // out.print("{x}\n", .{stackPointer}) catch {};
     // var curr_stack = @intToPtr([*]u8, stackPointer);

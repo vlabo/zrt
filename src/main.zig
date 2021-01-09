@@ -2,12 +2,12 @@ const zrt = @import("zrt.zig");
 const gpio = zrt.gpio;
 const time = zrt.time;
 const Uart = zrt.uart.Uart;
-const Systick = zrt.systick;
+// const Systick = zrt.systick;
 
 extern var _sbss: u8;
 extern var _ebss: u8;
 pub fn main() noreturn {
-    //asm volatile ("SVC 0");
+    asm volatile ("SVC 0");
     var uart = Uart.new();
     var out = uart.get_out_stream();
     var in = uart.get_in_stream();
