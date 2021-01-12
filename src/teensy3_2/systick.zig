@@ -1,15 +1,11 @@
 const cpu = @import("mk20dx256.zig");
 const Config = @import("config.zig");
-const Uart = @import("uart.zig").Uart;
-const interupts = @import("interrupt.zig");
-const gpio = @import("gpio.zig");
 
 var systick_ticks: u32 = 0;
-var out: Uart.OutStream = undefined;
 
 pub fn init() void {
-    var uart = Uart.new();
-    out = uart.get_out_stream();
+    // uart = Uart.new();
+    // out = uart.get_out_stream();
     cpu.SysTick.RVR = @enumToInt(Config.frequency) / 10;
     cpu.SysTick.CSR = cpu.SysTick_CSR_ENABLE_MASK | cpu.SysTick_CSR_TICKINT_MASK | cpu.SysTick_CSR_CLKSOURCE_MASK;
 }

@@ -1,10 +1,10 @@
 const cpu = @import("mk20dx256.zig");
 const config = @import("config.zig");
 
-pub fn delay(duration: i32) void {
-    var dur: i32 = duration;
+pub fn sleep_ms(duration: u64) void {
+    var dur: u64 = duration;
     while (dur > 0) {
-        var inner: i32 = @enumToInt(config.frequency) * 7 / 1000;
+        var inner: u64 = @enumToInt(config.frequency) / 1000;
         while (inner > 0) {
             inner -= 1;
             cpu.nop();

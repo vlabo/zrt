@@ -1,14 +1,13 @@
 const zrt = @import("zrt.zig");
-const gpio = zrt.gpio;
-const time = zrt.time;
-const Uart = zrt.uart.Uart;
+const time = zrt.Time;
+const Uart = zrt.Uart;
 
 pub fn main() void {
-    var uart = Uart.new();
-    var out = uart.get_out_stream();
+    var uart = Uart.new() catch { @panic("Failed to open Uart."); };
+    var out = uart.getOutStream();
 
     while (true) {
-        out.print("Micro:bit\n", .{}) catch {};
-        time.delay(1000);
+        out.print("Writing\n", .{}) catch {};
+        time.sleep_ms(1000);
     }
 }
