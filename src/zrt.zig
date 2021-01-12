@@ -1,6 +1,7 @@
 const build_options = @import("build_options");
 const teensy3_2 = build_options.teensy3_2;
 const raspberry = build_options.raspberry;
+const microbit = build_options.microbit;
 
 const Driver = @import("driver.zig");
 
@@ -9,6 +10,8 @@ const time = {
         return @import("teensy3_2/time.zig");
     } else if (raspberry) {
         return @import("raspberry/time.zig");
+    } else if(microbit) {
+        return @import("microbit/time.zig");
     } else {
         return {};
     }
@@ -19,6 +22,8 @@ const uart = {
         return @import("teensy3_2/uart.zig");
     } else if (raspberry) {
         return @import("raspberry/uart.zig");
+    } else if(microbit) {
+        return @import("microbit/uart.zig");
     } else {
         return {};
     }
@@ -54,11 +59,14 @@ const start = {
     }
 };
 
-pub const cpu = {
+
+pub const init = {
     if (teensy3_2) {
-        return @import("teensy3_2/mk20dx256.zig");
-    } else if (raspberry) {
-        return @import("raspberry/cortex-a.zig");
+        return @import("teensy3_2/init.zig");
+    } else if(microbit) {
+        return @import("microbit/init.zig");
+    } else if(raspberry) {
+        return @import("raspberry/init.zig");
     } else {
         return {};
     }
@@ -67,9 +75,10 @@ pub const cpu = {
 pub const Time = Driver.TimeTemplate(time.sleep_ms);
 pub const Uart = Driver.UartTemplate(uart.setup, uart.read_char, uart.write_char);
 
-const main = @import("main.zig");
+const entry = @import("main.zig");
 
-pub export fn zrt_start() noreturn {
-    _ = start.setup();
-    main.main();
+export fn zrtMain() noreturn {
+    init.setup();
+    entry.main();
+    while(true) {}
 }

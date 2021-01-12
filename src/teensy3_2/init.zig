@@ -144,7 +144,7 @@ export const flashconfigbytes: [16]u8 linksection(".flashconfig") = [_]u8{
     0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF,
 };
 
-pub fn setup() bool {
+pub fn setup() void {
     // The CPU has a watchdog feature which is on by default,
     // so we have to configure it to not have nasty reset-surprises
     // later on.
@@ -198,23 +198,23 @@ pub fn setup() bool {
     // Wait for the clock mode to synchronize to external
     while ((cpu.ClockGenerator.status & cpu.MCG_S_CLKST_MASK) != cpu.mcg_s_clkst(2)) {}
 
-    switch (config.frequancy) {
-        config.CpuFrequancy.F16MHz => {
+    switch (config.frequency) {
+        config.CpuFrequency.F16MHz => {
             cpu.ClockGenerator.control2 = cpu.mcg_c2_range0(2) | cpu.MCG_C2_EREFS_MASK | cpu.MCG_C2_LP_MASK;
         },
-        config.CpuFrequancy.F24MHz => {
+        config.CpuFrequency.F24MHz => {
             cpu.ClockGenerator.control5 = cpu.mcg_c5_prdiv0(7); // 16 MHz / 8 = 2 MHz (this needs to be 2-4MHz)
             cpu.ClockGenerator.control6 = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 48 MHz
         },
-        config.CpuFrequancy.F48MHz => {
+        config.CpuFrequency.F48MHz => {
             cpu.ClockGenerator.control5 = cpu.mcg_c5_prdiv0(7); // 16 MHz / 8 = 2 MHz (this needs to be 2-4MHz)
             cpu.ClockGenerator.control6 = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 48 MHz
         },
-        config.CpuFrequancy.F72MHz => {
+        config.CpuFrequency.F72MHz => {
             cpu.ClockGenerator.control5 = cpu.mcg_c5_prdiv0(5); // 16 MHz / 6 = 2.66 MHz (this needs to be 2-4MHz)
             cpu.ClockGenerator.control6 = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(3); // Enable PLL*27 = 71.82 MHz
         },
-        config.CpuFrequancy.F96MHz => {
+        config.CpuFrequency.F96MHz => {
             cpu.ClockGenerator.control5 = cpu.mcg_c5_prdiv0(3); // 16MHz / 4 = 4MHz (this needs to be 2-4MHz)
             cpu.ClockGenerator.control6 = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(0); // Enable PLL*24 = 96 MHz
         },
@@ -228,35 +228,35 @@ pub fn setup() bool {
     // -- For the modes <= 16 MHz, we have the MCG clock on 16 MHz, without FLL/PLL
     //    Also, USB is not possible
 
-    switch (config.frequancy) {
-        config.CpuFrequancy.F16MHz => {
+    switch (config.frequency) {
+        config.CpuFrequency.F16MHz => {
             // 16 MHz core, 16 MHz bus, 16 MHz flash
             cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(0) | cpu.sim_clkdiv1_outdiv4(0);
         },
-        config.CpuFrequancy.F24MHz => {
+        config.CpuFrequency.F24MHz => {
             // PLL is 48 MHz
             // 24 MHz core, 24 MHz bus, 24 MHz flash
             cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(1) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(1);
             cpu.System.ClockDevider2.* = cpu.sim_clkdiv2_usbdiv(0); // 48 * 1/1 = 48
         },
-        config.CpuFrequancy.F48MHz => {
+        config.CpuFrequency.F48MHz => {
             // 48 MHz core, 48 MHz bus, 24 MHz flash, USB = 96 / 2
             cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(0) | cpu.sim_clkdiv1_outdiv4(1);
             cpu.System.ClockDevider2.* = cpu.sim_clkdiv2_usbdiv(0); // 48 * 1/1 = 48
         },
-        config.CpuFrequancy.F72MHz => {
+        config.CpuFrequency.F72MHz => {
             // 72 MHz core, 36 MHz bus, 24 MHz flash
             cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(2);
             cpu.System.ClockDevider2.* = cpu.sim_clkdiv2_usbdiv(2) | cpu.SIM_CLKDIV2_USBFRAC_MASK; // 72 * 2/3 = 48
         },
-        config.CpuFrequancy.F96MHz => {
+        config.CpuFrequency.F96MHz => {
             // 96 MHz core, 48 MHz bus, 24 MHz flash (OVERCLOCKED!)
             cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(3);
             cpu.System.ClockDevider2.* = cpu.sim_clkdiv2_usbdiv(1); // 96 * 1/2 = 48
         },
     }
 
-    if (config.frequancy != config.CpuFrequancy.F16MHz) {
+    if (config.frequency != config.CpuFrequency.F16MHz) {
         // Switch clock source to PLL, keep FLL divider at 512
         cpu.ClockGenerator.control1 = cpu.mcg_c1_clks(0) | cpu.mcg_c1_frdiv(4);
 
@@ -273,11 +273,11 @@ pub fn setup() bool {
     Systick.init();
 
     interrupt.interrupt_enable();
-    return true;
 }
 
-extern fn zrt_start() noreturn;
+
+extern fn zrtMain() noreturn;
 
 export fn _start() linksection(".startup") noreturn {
-    zrt_start();
+    zrtMain();
 }

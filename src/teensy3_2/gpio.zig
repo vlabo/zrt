@@ -80,17 +80,17 @@ pub const Output = struct {
         return Self{ .output = output };
     }
 
-    fn set_high(self: Self) void {
+    pub fn set_high(self: Self) void {
         const one: u32 = 1;
         get_gpio(self.output.bank).setOutput = (one << self.output.shift);
     }
 
-    fn set_low(self: Self) void {
+    pub fn set_low(self: Self) void {
         const one: u32 = 1;
         get_gpio(self.output.bank).clearOutput = (one << self.output.shift);
     }
 
-    fn toggle(self: Self) void {
+    pub fn toggle(self: Self) void {
         const one: u32 = 1;
         get_gpio(self.output.bank).toggleOutput = (one << self.output.shift);
     }

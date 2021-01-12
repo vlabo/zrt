@@ -10,8 +10,8 @@ pub fn UartTemplate(comptime setup: fn () bool, comptime read_char: fn () u8, co
             failed_to_read,
         };
 
-        pub const OutStream = io.OutStream(Self, Error, Self.write_string);
-        pub const InStream = io.InStream(Self, Error, Self.read_string);
+        pub const OutStream = io.OutStream(Self, Error, Self.writeString);
+        pub const InStream = io.InStream(Self, Error, Self.readString);
 
         pub fn new() Error!Self {
             if (!setup()) {
@@ -20,7 +20,7 @@ pub fn UartTemplate(comptime setup: fn () bool, comptime read_char: fn () u8, co
             return Self{};
         }
 
-        fn write_string(self: Self, string: []const u8) Error!usize {
+        fn writeString(self: Self, string: []const u8) Error!usize {
             for (string) |value| {
                 if (value == '\n') {
                     if (!write_char('\r')) {
@@ -34,7 +34,7 @@ pub fn UartTemplate(comptime setup: fn () bool, comptime read_char: fn () u8, co
             return string.len;
         }
 
-        fn read_string(self: Self, buffer: []u8) Error!usize {
+        fn readString(self: Self, buffer: []u8) Error!usize {
             for (buffer) |value, index| {
                 var char = Self.read_char();
                 buffer[index] = char;
@@ -43,11 +43,11 @@ pub fn UartTemplate(comptime setup: fn () bool, comptime read_char: fn () u8, co
             return buffer.len;
         }
 
-        pub fn get_out_stream(self: Self) OutStream {
+        pub fn getOutStream(self: Self) OutStream {
             return OutStream{ .context = self };
         }
 
-        pub fn get_in_stream(self: Self) InStream {
+        pub fn getInStream(self: Self) InStream {
             return InStream{ .context = self };
         }
     };
