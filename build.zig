@@ -9,19 +9,58 @@ const stdout = std.io.getStdOut().outStream();
 
 pub fn build(b: *Builder) !void {
     const teensy = b.option(bool, "teensy", "Build for teensy 3.2") orelse false;
-    const microbit = b.option(bool, "microbit", "Build for micro:bit") orelse true;
+    const raspberry = b.option(bool, "raspberry", "Build for teensy 3.2") orelse false;
+    const microbit = b.option(bool, "microbit", "Build for micro:bit") orelse false;
 
     const firmware = b.addExecutable("firmware", "src/zrt.zig");
     firmware.addBuildOption(bool, "teensy3_2", teensy);
+    firmware.addBuildOption(bool, "raspberry", raspberry);
     firmware.addBuildOption(bool, "microbit", microbit);
 
     if (teensy) {
         try teensyBuild(b, firmware);
+    } else if (raspberry) {
+        try raspberryBuild(b, firmware);
     } else if (microbit) {
         try microbitBuild(b, firmware);
     } else {
         panic("Target not supported", .{});
     }
+
+    b.default_step.dependOn(&firmware.step);
+}
+
+fn raspberryBuild(b: *Builder, firmware: *LibExeObjStep) !void {
+    try stdout.print("Building for Raspberry pi 3B\n", .{});
+
+    const target = CrossTarget{
+        .cpu_arch = .aarch64,
+        .os_tag = .freestanding,
+        .cpu_model = .{ .explicit = &std.Target.aarch64.cpu.cortex_a53 },
+    };
+    firmware.setTarget(target);
+    firmware.setLinkerScriptPath("src/raspberry/link/cortex-a.ld");
+    firmware.setOutputDir("zig-cache");
+    firmware.setBuildMode(builtin.Mode.Debug);
+
+    const dis = b.step("dis", "Disassemble");
+    const qemu = b.step("qemu", "Run the firmware in qemu");
+    const qemu_debug = b.step("qemu_debug", "Run the firmware in qemu");
+
+    var qemu_args = generateQemuArguments(b, "aarch64.exe", "raspi3", firmware.getOutputPath());
+    const run_qemu = b.addSystemCommand(qemu_args.items);
+    run_qemu.step.dependOn(&firmware.step);
+    qemu.dependOn(&run_qemu.step);
+    
+    var qemu_debug_args = generateQemuDebugArguments(b, "aarch64.exe", "raspi3", firmware.getOutputPath());
+    const run_qemu_debug = b.addSystemCommand(qemu_debug_args.items);
+    run_qemu_debug.step.dependOn(&firmware.step);
+    qemu_debug.dependOn(&run_qemu_debug.step);
+
+    var disassemble_args = generateDissasembleArguments(b, firmware.getOutputPath());
+    const run_disassemble = b.addSystemCommand(disassemble_args.items);
+    run_disassemble.step.dependOn(&firmware.step);
+    dis.dependOn(&run_disassemble.step);
 
     b.default_step.dependOn(&firmware.step);
 }
@@ -51,12 +90,15 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
 
     var disassemble_args = generateDissasembleArguments(b, firmware.getOutputPath());
     const run_disassemble = b.addSystemCommand(disassemble_args.items);
+    run_disassemble.step.dependOn(&firmware.step);
     dis.dependOn(&run_disassemble.step);
 
     var teensy_upload_args = generateTeensyUploadArguments(b);
     const teensy_upload = b.addSystemCommand(teensy_upload_args.items);
     teensy_upload.step.dependOn(&create_hex.step);
     upload.dependOn(&teensy_upload.step);
+
+    b.default_step.dependOn(&firmware.step);
 }
 
 fn microbitBuild(b: *Builder, firmware: *LibExeObjStep) !void {
@@ -80,17 +122,17 @@ fn microbitBuild(b: *Builder, firmware: *LibExeObjStep) !void {
 
     var qemu_args = generateQemuArguments(b, "arm.exe", "microbit", firmware.getOutputPath());
     const run_qemu = b.addSystemCommand(qemu_args.items);
-    qemu.dependOn(&firmware.step);
+    run_qemu.step.dependOn(&firmware.step);
     qemu.dependOn(&run_qemu.step);
     
     var qemu_debug_args = generateQemuDebugArguments(b, "arm.exe", "microbit", firmware.getOutputPath());
     const run_qemu_debug = b.addSystemCommand(qemu_debug_args.items);
-    qemu_debug.dependOn(&firmware.step);
+    run_qemu_debug.step.dependOn(&firmware.step);
     qemu_debug.dependOn(&run_qemu_debug.step);
 
     var disassemble_args = generateDissasembleArguments(b, firmware.getOutputPath());
     const run_disassemble = b.addSystemCommand(disassemble_args.items);
-    dis.dependOn(&firmware.step);
+    run_disassemble.step.dependOn(&firmware.step);
     dis.dependOn(&run_disassemble.step);
 
     var objcopy_args = generateHexArguments(b, firmware.getOutputPath());
