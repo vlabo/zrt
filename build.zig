@@ -68,8 +68,6 @@ fn raspberryBuild(b: *Builder, firmware: *LibExeObjStep) !void {
 fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     try stdout.print("Building for teensy 3.2\n", .{});
 
-    firmware.addCSourceFile("src/c/task.c", &[_][]const u8{});
-
     const target = CrossTarget{
         .cpu_arch = .thumb,
         .os_tag = .freestanding,
@@ -81,6 +79,30 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     firmware.setLinkerScriptPath("src/teensy3_2/link/mk20dx256.ld");
     firmware.setOutputDir("zig-cache");
     firmware.setBuildMode(builtin.Mode.ReleaseSmall);
+
+        const cflags = [_][]const u8{
+        "-std=gnu99",
+        "-Iinclude",
+        "-Isrc/c/ARM_CM4F",
+        "-I/home/stv1sf/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/include",
+    };
+    const c_files = [_][]const u8{
+        "src/c/croutine.c",
+        "src/c/event_groups.c",
+        "src/c/list.c",
+        "src/c/queue.c",
+        "src/c/stream_buffer.c",
+        "src/c/tasks.c",
+        "src/c/timers.c",
+        "src/c/zig_interface.c",
+        "src/c/ARM_CM4F/port.c",
+    };
+
+    for (c_files) |c_file| {
+        firmware.addCSourceFile(c_file, &cflags);
+    }
+    firmware.addIncludeDir("include");
+
 
     const hex = b.step("hex", "Convert to hex");
     const upload = b.step("upload", "Upload");
@@ -101,7 +123,7 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     teensy_upload.step.dependOn(&create_hex.step);
     upload.dependOn(&teensy_upload.step);
 
-    b.default_step.dependOn(&firmware.step);
+    b.default_step.dependOn(hex);
 }
 
 fn microbitBuild(b: *Builder, firmware: *LibExeObjStep) !void {
@@ -117,6 +139,30 @@ fn microbitBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     firmware.setLinkerScriptPath("src/microbit/link/nRF51.ld");
     firmware.setOutputDir("zig-cache");
     firmware.setBuildMode(builtin.Mode.Debug);
+
+    const cflags = [_][]const u8{
+        "-std=gnu99",
+        "-Iinclude",
+        "-Isrc/c/ARM_CM0/",
+        "-I/home/stv1sf/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/include",
+    };
+    const c_files = [_][]const u8{
+        "src/c/croutine.c",
+        "src/c/event_groups.c",
+        "src/c/list.c",
+        "src/c/queue.c",
+        "src/c/stream_buffer.c",
+        "src/c/tasks.c",
+        "src/c/timers.c",
+        "src/c/test.c",
+        "src/c/heap_1.c",
+        "src/c/ARM_CM0/port.c",
+    };
+
+    for (c_files) |c_file| {
+        firmware.addCSourceFile(c_file, &cflags);
+    }
+    firmware.addIncludeDir("include");
 
     const hex = b.step("hex", "Convert to hex");
     const dis = b.step("dis", "Disassemble");

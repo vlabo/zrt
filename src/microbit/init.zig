@@ -6,6 +6,10 @@ pub fn setup() void {
     @memset(bss, 0, @ptrToInt(&_ebss) - @ptrToInt(&_sbss));
 }
 
+// void xPortPendSVHandler( void ) __attribute__ (( naked ));
+// void xPortSysTickHandler( void );
+// void vPortSVCHandler( void );
+
 comptime {
     asm (
         \\ .global _start
@@ -22,11 +26,11 @@ comptime {
         \\ .long 0
         \\ .long 0
         \\ .long 0
-        \\ .long SVCHandler
+        \\ .long vPortSVCHandler
         \\ .long 0
         \\ .long 0
-        \\ .long PendSVHandler
-        \\ .long SysTickHandler
+        \\ .long xPortPendSVHandler
+        \\ .long xPortSysTickHandler
     );
 }
 
@@ -35,7 +39,6 @@ extern fn zrtMain() noreturn;
 export fn resetHandler() noreturn {
     zrtMain();
 }
-
 export fn NMIHandler() noreturn {
     while (true) {}
 }
@@ -49,4 +52,3 @@ export fn SVCHandler() void {}
 export fn PendSVHandler() void {}
 
 export fn SysTickHandler() void {}
-

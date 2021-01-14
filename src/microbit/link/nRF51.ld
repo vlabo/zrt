@@ -9,15 +9,13 @@ SECTIONS
     .text : { 
         *(.text*)
         *(.rodata*) 
-    } > rom = 0xff
+    } > rom
 
     .ARM.exidx : {
         __exidx_start = .;
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
         __exidx_end = .;
     } >rom
-
-    .bss : { *(.bss*) } > ram
 
     .data : {
         . = ALIGN(4);
@@ -29,9 +27,7 @@ SECTIONS
         . = ALIGN(4);
         _sbss = .;
         *(.bss*)
-        *(COMMON)
         . = ALIGN(4);
         _ebss = .;
     } > ram
-
 }
