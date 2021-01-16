@@ -1,29 +1,34 @@
 const cpu = @import("mk20dx256.zig");
 
+var isInitialized = false;
+
 pub fn setup() bool {
-    cpu.PortB.controlRegister[16] = cpu.port_pcr_mux(3);
-    cpu.PortB.controlRegister[17] = cpu.port_pcr_mux(3);
-    cpu.System.ClockGating4.* |= cpu.SIM_SCGC4_UART0_MASK;
+    if(!isInitialized) {
+        cpu.PortB.controlRegister[16] = cpu.port_pcr_mux(3);
+        cpu.PortB.controlRegister[17] = cpu.port_pcr_mux(3);
+        cpu.System.ClockGating4.* |= cpu.SIM_SCGC4_UART0_MASK;
 
-    // Set defaults (8bit no parity)
-    cpu.Uart0.C1 = 0;
+        // Set defaults (8bit no parity)
+        cpu.Uart0.C1 = 0;
 
-    // Set the baud rate. This has 3 components:
-    //  BDH = Contains interrupt enable bits and the high 5 bits of the divisor
-    //  BDL = Contains the low 8 bits of the divisor
-    //  C4_BRFA = The fine adjust value
-    //
-    //  tx baud = module clock / (16 * (divisor + BRFA/32))
-    const baud: comptime_int = 115200;
-    const divisor: comptime_int = 72000000 / (baud * 16);
-    const brfa: comptime_int = (2 * 72000000) / baud - divisor * 32;
+        // Set the baud rate. This has 3 components:
+        //  BDH = Contains interrupt enable bits and the high 5 bits of the divisor
+        //  BDL = Contains the low 8 bits of the divisor
+        //  C4_BRFA = The fine adjust value
+        //
+        //  tx baud = module clock / (16 * (divisor + BRFA/32))
+        const baud: comptime_int = 115200;
+        const divisor: comptime_int = 72000000 / (baud * 16);
+        const brfa: comptime_int = (2 * 72000000) / baud - divisor * 32;
 
-    cpu.Uart0.BDH = cpu.uart_bdh_sbr(divisor >> 8);
-    cpu.Uart0.BDL = cpu.uart_bdl_sbr(divisor);
-    cpu.Uart0.C4 = cpu.uart_c4_brfa(brfa);
+        cpu.Uart0.BDH = cpu.uart_bdh_sbr(divisor >> 8);
+        cpu.Uart0.BDL = cpu.uart_bdl_sbr(divisor);
+        cpu.Uart0.C4 = cpu.uart_c4_brfa(brfa);
 
-    // Enable Tx and Rx
-    cpu.Uart0.C2 = cpu.UART_C2_TE_MASK | cpu.UART_C2_RE_MASK;
+        // Enable Tx and Rx
+        cpu.Uart0.C2 = cpu.UART_C2_TE_MASK | cpu.UART_C2_RE_MASK;
+        isInitialized = true;
+    }
     return true;
 }
 

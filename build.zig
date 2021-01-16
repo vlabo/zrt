@@ -73,28 +73,18 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
         .os_tag = .freestanding,
         .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_m4 },
     };
-    // const lib_cflags = &[_][]const u8{ "-Wall", "-Os", "-mthumb", "-ffunction-sections", "-fdata-sections", "-nostdlib" };
     firmware.setTarget(target);
-    // firmware.addCSourceFile("src/c/TeensyThreads-asm.S", lib_cflags);
     firmware.setLinkerScriptPath("src/teensy3_2/link/mk20dx256.ld");
     firmware.setOutputDir("zig-cache");
     firmware.setBuildMode(builtin.Mode.ReleaseSmall);
 
-        const cflags = [_][]const u8{
-        "-std=gnu99",
-        "-Iinclude",
+    const cflags = [_][]const u8{
         "-Isrc/c/ARM_CM4F",
-        "-I/home/stv1sf/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/include",
+        "-Isrc/c/include",
     };
+    
     const c_files = [_][]const u8{
-        "src/c/croutine.c",
-        "src/c/event_groups.c",
-        "src/c/list.c",
-        "src/c/queue.c",
-        "src/c/stream_buffer.c",
-        "src/c/tasks.c",
-        "src/c/timers.c",
-        "src/c/zig_interface.c",
+        "src/c/src/zig_interface.c",
         "src/c/ARM_CM4F/port.c",
     };
 
@@ -102,7 +92,6 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
         firmware.addCSourceFile(c_file, &cflags);
     }
     firmware.addIncludeDir("include");
-
 
     const hex = b.step("hex", "Convert to hex");
     const upload = b.step("upload", "Upload");
@@ -142,20 +131,11 @@ fn microbitBuild(b: *Builder, firmware: *LibExeObjStep) !void {
 
     const cflags = [_][]const u8{
         "-std=gnu99",
-        "-Iinclude",
-        "-Isrc/c/ARM_CM0/",
-        "-I/home/stv1sf/gcc-arm-none-eabi-9-2019-q4-major/arm-none-eabi/include",
+        "-Isrc/c/include",
+        "-Isrc/c/ARM_CM0",
     };
     const c_files = [_][]const u8{
-        "src/c/croutine.c",
-        "src/c/event_groups.c",
-        "src/c/list.c",
-        "src/c/queue.c",
-        "src/c/stream_buffer.c",
-        "src/c/tasks.c",
-        "src/c/timers.c",
-        "src/c/test.c",
-        "src/c/heap_1.c",
+        "src/c/src/zig_interface.c",
         "src/c/ARM_CM0/port.c",
     };
 

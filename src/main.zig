@@ -6,28 +6,29 @@ const gpio = zrt.gpio;
 const rt = @import("rtos/rt.zig");
 const heap = @import("rtos/heap.zig");
 
-
 var uart: Uart = undefined;
 var led: gpio.Output = undefined;
 
 var HeapMemory: [1024 * 10]u8 = undefined;
 var FixedBufferAllocator: std.heap.FixedBufferAllocator = undefined; 
 
-fn task() void {
+export fn task() void {
     var out = uart.getOutStream();
+
     while (true) {
-        out.print("0", .{}) catch {};
         led.toggle();
         rt.taskDelay(1000);
     }
 }
 
-fn task2() void {
+export fn task2() void {
     var out = uart.getOutStream();
+
     while (true) {
-        out.print("1", .{}) catch {};
         led.toggle();
-        rt.taskDelay(387);
+        rt.taskDelay(10);
+        led.toggle();
+        rt.taskDelay(100);
     }
 }
 
@@ -38,16 +39,16 @@ pub fn main() void {
         @panic("Failed to open Uart.");
     };
     var out = uart.getOutStream();
-    out.print("Starting up...\n", .{}) catch {};
-
+    out.print("startup\n", .{}) catch{};
     led = gpio.Output.new(13);
-
-    rt.createTask(task, "task", 0) catch {
-        out.print("Failed to create task1", .{}) catch {};
-    };
-    rt.createTask(task2, "task2", 0) catch {
-        out.print("Failed to create task2", .{}) catch {};
+   
+    _ = rt.createTask(&FixedBufferAllocator.allocator, task, 512) catch {
+        out.print("Failed to create task1", .{}) catch { return undefined; };
     };
 
-    rt.startSchedular();
+    _ = rt.createTask(&FixedBufferAllocator.allocator, task2, 512) catch {
+        out.print("Failed to create task1", .{}) catch { return undefined; };
+    };
+
+    rt.startSchedular(&FixedBufferAllocator.allocator) catch {};
 }
