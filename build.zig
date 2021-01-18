@@ -8,13 +8,18 @@ const panic = std.debug.panic;
 const stdout = std.io.getStdOut().outStream();
 
 pub fn build(b: *Builder) !void {
-    const teensy = b.option(bool, "teensy", "Build for teensy 3.2") orelse true;
+    const teensy = b.option(bool, "teensy", "Build for teensy 3.2") orelse false;
+    const microbit = b.option(bool, "microbit", "Build for micro:bit") orelse true;
+
 
     const firmware = b.addExecutable("firmware", "src/zrt.zig");
     firmware.addBuildOption(bool, "teensy3_2", teensy);
+    firmware.addBuildOption(bool, "microbit", microbit);
 
     if (teensy) {
         try teensyBuild(b, firmware);
+    } else if (microbit) {
+        try microbitBuild(b, firmware);
     } else {
         panic("Target not supported", .{});
     }
@@ -70,6 +75,46 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     upload.dependOn(&teensy_upload.step);
 
     b.default_step.dependOn(hex);
+}
+
+fn microbitBuild(b: *Builder, firmware: *LibExeObjStep) !void {
+    try stdout.print("Building for microbit\n", .{});
+
+    const target = CrossTarget{
+        .cpu_arch = .thumb,
+        .os_tag = .freestanding,
+        .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_m0 },
+    };
+
+    firmware.setTarget(target);
+    firmware.setLinkerScriptPath("src/microbit/link/nRF51.ld");
+    firmware.setOutputDir("zig-cache");
+    firmware.setBuildMode(builtin.Mode.Debug);
+
+    const hex = b.step("hex", "Convert to hex");
+    const dis = b.step("dis", "Disassemble");
+    const qemu = b.step("qemu", "Run the firmware in qemu");
+    const qemu_debug = b.step("qemu_debug", "Run the firmware in qemu and wait for debugger");
+
+    var qemu_args = generateQemuArguments(b, "arm.exe", "microbit", firmware.getOutputPath());
+    const run_qemu = b.addSystemCommand(qemu_args.items);
+    run_qemu.step.dependOn(&firmware.step);
+    qemu.dependOn(&run_qemu.step);
+    
+    var qemu_debug_args = generateQemuDebugArguments(b, "arm.exe", "microbit", firmware.getOutputPath());
+    const run_qemu_debug = b.addSystemCommand(qemu_debug_args.items);
+    run_qemu_debug.step.dependOn(&firmware.step);
+    qemu_debug.dependOn(&run_qemu_debug.step);
+
+    var disassemble_args = generateDissasembleArguments(b, firmware.getOutputPath());
+    const run_disassemble = b.addSystemCommand(disassemble_args.items);
+    run_disassemble.step.dependOn(&firmware.step);
+    dis.dependOn(&run_disassemble.step);
+
+    var objcopy_args = generateHexArguments(b, firmware.getOutputPath());
+    const create_hex = b.addSystemCommand(objcopy_args.items);
+    create_hex.step.dependOn(&firmware.step);
+    hex.dependOn(&create_hex.step);
 }
 
 fn generateHexArguments(b: *Builder, firmwarePath: []const u8) std.ArrayList([]const u8) {

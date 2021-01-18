@@ -1,11 +1,14 @@
 const build_options = @import("build_options");
 const teensy3_2 = build_options.teensy3_2;
+const microbit = build_options.microbit;
 
 const Driver = @import("driver.zig");
 
 const time = {
     if (teensy3_2) {
         return @import("teensy3_2/time.zig");
+    } else if(microbit) {
+        return @import("microbit/time.zig");
     } else {
         return {};
     }
@@ -14,6 +17,8 @@ const time = {
 const uart = {
     if (teensy3_2) {
         return @import("teensy3_2/uart.zig");
+    } else if(microbit) {
+        return @import("microbit/uart.zig");
     } else {
         return {};
     }
@@ -35,18 +40,11 @@ pub const systick = {
     }
 };
 
-const start = {
-    if (teensy3_2) {
-        return @import("teensy3_2/startup.zig");
-    } else {
-        return {};
-    }
-};
-
-
 pub const init = {
     if (teensy3_2) {
         return @import("teensy3_2/init.zig");
+    } else if(microbit) {
+        return @import("microbit/init.zig");
     } else {
         return {};
     }
