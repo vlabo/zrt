@@ -619,6 +619,34 @@ pub const SysTick_CALIB_SKEW_SHIFT = 30;
 pub const SysTick_CALIB_NOREF_MASK = 0x80000000;
 pub const SysTick_CALIB_NOREF_SHIFT = 31;
 
+pub const SCB_ICSR_PENDSVCLR_MASK = 0x8000000;
+pub const SCB_ICSR_PENDSVCLR_SHIFT = 27;
+pub const SCB_ICSR_PENDSVSET_MASK = 0x10000000;
+pub const SCB_ICSR_PENDSVSET_SHIFT = 28;
+
+// SCB - Peripheral register structure
+const SystemControl_MemMap = struct {
+    RESERVED_0: [8]u8,
+    ACTLR: u32, // < Auxiliary Control Register,, offset: 0x8
+    RESERVED_1: [3316]u8,
+    CPUID: u32, // < CPUID Base Register, offset: 0xD00
+    ICSR: u32, // < Interrupt Control and State Register, offset: 0xD04
+    VTOR: u32, // < Vector Table Offset Register, offset: 0xD08
+    AIRCR: u32, // < Application Interrupt and Reset Control Register, offset: 0xD0C
+    SCR: u32, // < System Control Register, offset: 0xD10
+    CCR: u32, // < Configuration and Control Register, offset: 0xD14
+    SHPR1: u32, // < System Handler Priority Register 1, offset: 0xD18
+    SHPR2: u32, // < System Handler Priority Register 2, offset: 0xD1C
+    SHPR3: u32, // < System Handler Priority Register 3, offset: 0xD20
+    SHCSR: u32, // < System Handler Control and State Register, offset: 0xD24
+    CFSR: u32, // < Configurable Fault Status Registers, offset: 0xD28
+    HFSR: u32, // < HardFault Status register, offset: 0xD2C
+    DFSR: u32, // < Debug Fault Status Register, offset: 0xD30
+    MMFAR: u32, // < MemManage Address Register, offset: 0xD34
+    BFAR: u32, // < BusFault Address Register, offset: 0xD38
+    AFSR: u32, // < Auxiliary Fault Status Register, offset: 0xD3C
+};
+
 pub const Port = struct {
     controlRegister: [32]u32, // PCR 0-31
     globalPinControlLow: u32, // GPCLR
@@ -766,6 +794,7 @@ pub var Power = @intToPtr(*volatile PowerStruct, 0x4007E000);
 
 pub var Watchdog = @intToPtr(*volatile WatchdogStruct, 0x40052000);
 
+pub var SystemControl = @intToPtr(*volatile SystemControl_MemMap, 0xE000E000);
 pub var SysTick = @intToPtr(*volatile SysTick_MemMap, 0xE000E010);
 
 pub fn port_pcr_mux(comptime x: comptime_int) comptime_int {

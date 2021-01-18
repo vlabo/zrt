@@ -272,7 +272,7 @@ pub fn setup() void {
 
     Systick.init();
 
-    interrupt.interrupt_enable();
+    interrupt.enable();
 }
 
 

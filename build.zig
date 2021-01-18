@@ -8,59 +8,16 @@ const panic = std.debug.panic;
 const stdout = std.io.getStdOut().outStream();
 
 pub fn build(b: *Builder) !void {
-    const teensy = b.option(bool, "teensy", "Build for teensy 3.2") orelse false;
-    const raspberry = b.option(bool, "raspberry", "Build for teensy 3.2") orelse false;
-    const microbit = b.option(bool, "microbit", "Build for micro:bit") orelse false;
+    const teensy = b.option(bool, "teensy", "Build for teensy 3.2") orelse true;
 
     const firmware = b.addExecutable("firmware", "src/zrt.zig");
     firmware.addBuildOption(bool, "teensy3_2", teensy);
-    firmware.addBuildOption(bool, "raspberry", raspberry);
-    firmware.addBuildOption(bool, "microbit", microbit);
 
     if (teensy) {
         try teensyBuild(b, firmware);
-    } else if (raspberry) {
-        try raspberryBuild(b, firmware);
-    } else if (microbit) {
-        try microbitBuild(b, firmware);
     } else {
         panic("Target not supported", .{});
     }
-
-    b.default_step.dependOn(&firmware.step);
-}
-
-fn raspberryBuild(b: *Builder, firmware: *LibExeObjStep) !void {
-    try stdout.print("Building for Raspberry pi 3B\n", .{});
-
-    const target = CrossTarget{
-        .cpu_arch = .aarch64,
-        .os_tag = .freestanding,
-        .cpu_model = .{ .explicit = &std.Target.aarch64.cpu.cortex_a53 },
-    };
-    firmware.setTarget(target);
-    firmware.setLinkerScriptPath("src/raspberry/link/cortex-a.ld");
-    firmware.setOutputDir("zig-cache");
-    firmware.setBuildMode(builtin.Mode.Debug);
-
-    const dis = b.step("dis", "Disassemble");
-    const qemu = b.step("qemu", "Run the firmware in qemu");
-    const qemu_debug = b.step("qemu_debug", "Run the firmware in qemu");
-
-    var qemu_args = generateQemuArguments(b, "aarch64.exe", "raspi3", firmware.getOutputPath());
-    const run_qemu = b.addSystemCommand(qemu_args.items);
-    run_qemu.step.dependOn(&firmware.step);
-    qemu.dependOn(&run_qemu.step);
-    
-    var qemu_debug_args = generateQemuDebugArguments(b, "aarch64.exe", "raspi3", firmware.getOutputPath());
-    const run_qemu_debug = b.addSystemCommand(qemu_debug_args.items);
-    run_qemu_debug.step.dependOn(&firmware.step);
-    qemu_debug.dependOn(&run_qemu_debug.step);
-
-    var disassemble_args = generateDissasembleArguments(b, firmware.getOutputPath());
-    const run_disassemble = b.addSystemCommand(disassemble_args.items);
-    run_disassemble.step.dependOn(&firmware.step);
-    dis.dependOn(&run_disassemble.step);
 
     b.default_step.dependOn(&firmware.step);
 }
@@ -73,11 +30,25 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
         .os_tag = .freestanding,
         .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_m4 },
     };
-
     firmware.setTarget(target);
     firmware.setLinkerScriptPath("src/teensy3_2/link/mk20dx256.ld");
     firmware.setOutputDir("zig-cache");
     firmware.setBuildMode(builtin.Mode.ReleaseSmall);
+
+    const cflags = [_][]const u8{
+        "-Isrc/c/ARM_CM4F",
+        "-Isrc/c/include",
+    };
+    
+    const c_files = [_][]const u8{
+        "src/c/src/zig_interface.c",
+        "src/c/ARM_CM4F/port.c",
+    };
+
+    for (c_files) |c_file| {
+        firmware.addCSourceFile(c_file, &cflags);
+    }
+    firmware.addIncludeDir("include");
 
     const hex = b.step("hex", "Convert to hex");
     const upload = b.step("upload", "Upload");
@@ -98,47 +69,7 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     teensy_upload.step.dependOn(&create_hex.step);
     upload.dependOn(&teensy_upload.step);
 
-    b.default_step.dependOn(&firmware.step);
-}
-
-fn microbitBuild(b: *Builder, firmware: *LibExeObjStep) !void {
-    try stdout.print("Building for microbit\n", .{});
-
-    const target = CrossTarget{
-        .cpu_arch = .thumb,
-        .os_tag = .freestanding,
-        .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_m0 },
-    };
-
-    firmware.setTarget(target);
-    firmware.setLinkerScriptPath("src/microbit/link/nRF51.ld");
-    firmware.setOutputDir("zig-cache");
-    firmware.setBuildMode(builtin.Mode.Debug);
-
-    const hex = b.step("hex", "Convert to hex");
-    const dis = b.step("dis", "Disassemble");
-    const qemu = b.step("qemu", "Run the firmware in qemu");
-    const qemu_debug = b.step("qemu_debug", "Run the firmware in qemu and wait for debugger");
-
-    var qemu_args = generateQemuArguments(b, "arm.exe", "microbit", firmware.getOutputPath());
-    const run_qemu = b.addSystemCommand(qemu_args.items);
-    run_qemu.step.dependOn(&firmware.step);
-    qemu.dependOn(&run_qemu.step);
-    
-    var qemu_debug_args = generateQemuDebugArguments(b, "arm.exe", "microbit", firmware.getOutputPath());
-    const run_qemu_debug = b.addSystemCommand(qemu_debug_args.items);
-    run_qemu_debug.step.dependOn(&firmware.step);
-    qemu_debug.dependOn(&run_qemu_debug.step);
-
-    var disassemble_args = generateDissasembleArguments(b, firmware.getOutputPath());
-    const run_disassemble = b.addSystemCommand(disassemble_args.items);
-    run_disassemble.step.dependOn(&firmware.step);
-    dis.dependOn(&run_disassemble.step);
-
-    var objcopy_args = generateHexArguments(b, firmware.getOutputPath());
-    const create_hex = b.addSystemCommand(objcopy_args.items);
-    create_hex.step.dependOn(&firmware.step);
-    hex.dependOn(&create_hex.step);
+    b.default_step.dependOn(hex);
 }
 
 fn generateHexArguments(b: *Builder, firmwarePath: []const u8) std.ArrayList([]const u8) {
