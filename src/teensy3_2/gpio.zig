@@ -68,31 +68,32 @@ fn get_port(bank: Bank) *volatile cpu.Port {
 
 pub const Output = struct {
     output: IO,
+    gpio: *volatile cpu.Gpio,
 
     const Self = @This();
 
     pub fn new(pin: u5) Self {
         var output = IoMap[pin];
         const one: u32 = 1;
-        get_gpio(output.bank).dataDirection |= (one << output.shift);
+        var gpio = get_gpio(output.bank);
+        gpio.dataDirection |= (one << output.shift);
         get_port(output.bank).controlRegister[output.shift] = cpu.port_pcr_mux(1) | cpu.PORT_PCR_SRE_MASK | cpu.PORT_PCR_DSE_MASK;
-
-        return Self{ .output = output };
+        return Self{ .output = output, .gpio = gpio };
     }
 
     pub fn set_high(self: Self) void {
         const one: u32 = 1;
-        get_gpio(self.output.bank).setOutput = (one << self.output.shift);
+        self.gpio.setOutput = (one << self.output.shift);
     }
 
     pub fn set_low(self: Self) void {
         const one: u32 = 1;
-        get_gpio(self.output.bank).clearOutput = (one << self.output.shift);
+        self.gpio.clearOutput = (one << self.output.shift);
     }
 
     pub fn toggle(self: Self) void {
         const one: u32 = 1;
-        get_gpio(self.output.bank).toggleOutput = (one << self.output.shift);
+        self.gpio.toggleOutput = (one << self.output.shift);
     }
 };
 

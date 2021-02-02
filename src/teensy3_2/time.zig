@@ -12,7 +12,3 @@ pub fn sleep_ms(duration: u64) void {
         dur -= 1;
     }
 }
-
-pub fn trigger_pendsv() void {
-    cpu.SystemControl.ICSR = 0x10000000;
-}

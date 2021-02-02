@@ -1,4 +1,5 @@
 const cpu = @import("mk20dx256.zig");
+const config = @import("config.zig");
 
 var isInitialized = false;
 
@@ -18,8 +19,8 @@ pub fn setup() bool {
         //
         //  tx baud = module clock / (16 * (divisor + BRFA/32))
         const baud: comptime_int = 115200;
-        const divisor: comptime_int = 72000000 / (baud * 16);
-        const brfa: comptime_int = (2 * 72000000) / baud - divisor * 32;
+        const divisor: comptime_int = @enumToInt(config.frequency) / (baud * 16);
+        const brfa: comptime_int = (2 * @enumToInt(config.frequency)) / baud - divisor * 32;
 
         cpu.Uart0.BDH = cpu.uart_bdh_sbr(divisor >> 8);
         cpu.Uart0.BDL = cpu.uart_bdl_sbr(divisor);

@@ -1,4 +1,4 @@
-const Systick = @import("systick.zig");
+const cpu = @import("mk20dx256.zig");
 
 pub fn enable() void {
     asm volatile ("CPSIE i"
@@ -16,9 +16,15 @@ pub fn disable() void {
     );
 }
 
+pub fn trigger_pendsv() void {
+    cpu.SystemControl.ICSR = 0x10000000;
+}
+
 extern fn xPortPendSVHandler() callconv(.C) void;
 extern fn xPortSysTickHandler() callconv(.C) void;
 extern fn vPortSVCHandler() callconv(.C) void;
+
+extern fn USBOTG_IRQHandler() callconv(.C) void;
 
 pub export fn isr_panic() void {
     while (true) {}
@@ -99,7 +105,7 @@ pub const isr_pit_ch1: fn () callconv(.C) void = isr_ignore;
 pub const isr_pit_ch2: fn () callconv(.C) void = isr_ignore;
 pub const isr_pit_ch3: fn () callconv(.C) void = isr_ignore;
 pub const isr_pdb: fn () callconv(.C) void = isr_ignore;
-pub const isr_usb_otg: fn () callconv(.C) void = isr_ignore;
+pub const isr_usb_otg: fn () callconv(.C) void = USBOTG_IRQHandler;
 pub const isr_usb_charger: fn () callconv(.C) void = isr_ignore;
 
 pub const isr_dac0: fn () callconv(.C) void = isr_ignore;
