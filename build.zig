@@ -43,12 +43,15 @@ fn teensyBuild(b: *Builder, firmware: *LibExeObjStep) !void {
     const c_files = [_][]const u8{
         "src/c/src/zig_interface.c",
         "src/c/ARM_CM4F/port.c",
+        "src/c/src/usb.c",
+        "src/c/src/buffers.c",
+        "src/c/src/arm_cm4.c",
     };
 
     for (c_files) |c_file| {
         firmware.addCSourceFile(c_file, &cflags);
     }
-    firmware.addIncludeDir("include");
+    firmware.addIncludeDir("src/c/include");
 
     const hex = b.step("hex", "Convert to hex");
     const upload = b.step("upload", "Upload");

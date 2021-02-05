@@ -7,6 +7,8 @@ pub const PORT_PCR_DSE_MASK = 0x40;
 pub const WDOG_UNLOCK_SEQ2 = 0xD928;
 pub const WDOG_UNLOCK_SEQ1 = 0xC520;
 pub const WDOG_STCTRLH_ALLOWUPDATE_MASK = 0x10;
+pub const WDOG_STCTRLH_WDOGEN_MASK = 0x01;
+
 
 pub const PMC_REGSC_BGBE_MASK = 0x1;
 pub const PMC_REGSC_BGBE_SHIFT = 0;

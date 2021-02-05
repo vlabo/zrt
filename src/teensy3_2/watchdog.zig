@@ -10,5 +10,6 @@ pub fn disable() void {
     cpu.nop();
 
     // And finally, we can disable the watchdog while allowing changes later on
-    cpu.Watchdog.statusAndControlHigh = cpu.WDOG_STCTRLH_ALLOWUPDATE_MASK;
+    var mask: u16 = cpu.WDOG_STCTRLH_WDOGEN_MASK;
+    cpu.Watchdog.statusAndControlHigh &= ~mask;
 }

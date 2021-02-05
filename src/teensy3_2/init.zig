@@ -144,81 +144,32 @@ export const flashconfigbytes: [16]u8 linksection(".flashconfig") = [_]u8{
 };
 
 pub fn setup() void {
-    // The CPU has a watchdog feature which is on by default,
-    // so we have to configure it to not have nasty reset-surprises
-    // later on.
+
     watchdog.disable();
-
-    // There is a write-once-after-reset register that allows to
-    // set which power states are available. Let's set it here.
-    if (cpu.RegolatorStatusAndControl.* & cpu.PMC_REGSC_ACKISO_MASK != 0) {
-        cpu.RegolatorStatusAndControl.* |= cpu.PMC_REGSC_ACKISO_MASK;
-    }
-
-    // For the sake of simplicity, enable all GPIO port clocks
-    cpu.System.ClockGating5.* |= (cpu.SIM_SCGC5_PORTA_MASK | cpu.SIM_SCGC5_PORTB_MASK | cpu.SIM_SCGC5_PORTC_MASK | cpu.SIM_SCGC5_PORTD_MASK | cpu.SIM_SCGC5_PORTE_MASK);
-
-    // ----------------------------------------------------------------------------------
-    // Setup clocks
-    // ----------------------------------------------------------------------------------
-    // See section 5 in the Freescale K20 manual for how clock distribution works
-    // The limits are outlined in section 5.5:
-    //   Core and System clocks: max 72 MHz
-    //   Bus/peripherial clock:  max 50 MHz (integer divide of core)
-    //   Flash clock:            max 25 MHz
-    //
-
-    // Set MCG to very high frequency crystal and request oscillator. We have
-    // to do this first so that the divisor will be correct (512 and not 16)
-    cpu.ClockGenerator.control2 = cpu.mcg_c2_range0(2) | cpu.MCG_C2_EREFS0_MASK;
-
-    // Select the external reference clock for MCGOUTCLK
-    // The divider for the FLL has to be chosen that we get something in 31.25 to 39.0625 kHz
-    // 16MHz / 512 = 31.25 kHz -> set FRDIV to 4
-    cpu.ClockGenerator.control1 = cpu.mcg_c1_clks(2) | cpu.mcg_c1_frdiv(4);
-
-    // Wait for OSC to become ready
-    while ((cpu.ClockGenerator.status & cpu.MCG_S_OSCINIT0_MASK) == 0) {}
-
-    // Wait for the FLL to synchronize to external reference
-    while ((cpu.ClockGenerator.status & cpu.MCG_S_IREFST_MASK) != 0) {}
-
-    // Wait for the clock mode to synchronize to external
-    while ((cpu.ClockGenerator.status & cpu.MCG_S_CLKST_MASK) != cpu.mcg_s_clkst(2)) {}
-
-    switch (config.frequency) {
-        config.CpuFrequency.F72MHz => {
-            cpu.ClockGenerator.control5 = cpu.mcg_c5_prdiv0(5); // 16 MHz / 6 = 2.66 MHz (this needs to be 2-4MHz)
-            cpu.ClockGenerator.control6 = cpu.MCG_C6_PLLS_MASK | cpu.mcg_c6_vdiv0(3); // Enable PLL*27 = 71.82 MHz
-        },
-    }
-
-    // Now that we setup and enabled the PLL, wait for it to become active
-    while ((cpu.ClockGenerator.status & cpu.MCG_S_PLLST_MASK) == 1) {}
-    // and locked
-    while ((cpu.ClockGenerator.status & cpu.MCG_S_LOCK0_MASK) == 1) {}
-
-    // -- For the modes <= 16 MHz, we have the MCG clock on 16 MHz, without FLL/PLL
-    //    Also, USB is not possible
-
-    switch (config.frequency) {
-        config.CpuFrequency.F72MHz => {
-            // 72 MHz core, 36 MHz bus, 24 MHz flash
-            cpu.System.ClockDevider1.* = cpu.sim_clkdiv1_outdiv1(0) | cpu.sim_clkdiv1_outdiv2(1) | cpu.sim_clkdiv1_outdiv4(2);
-            cpu.System.ClockDevider2.* = cpu.sim_clkdiv2_usbdiv(2) | cpu.SIM_CLKDIV2_USBFRAC_MASK; // 72 * 2/3 = 48
-        },
-    }
 
     var bss = @ptrCast([*]u8, &_sbss);
     @memset(bss, 0, @ptrToInt(&_ebss) - @ptrToInt(&_sbss));
 
-    systick.init();
-    interrupt.enable();
 }
-
 
 extern fn zrtMain() noreturn;
 
 export fn _start() linksection(".startup") noreturn {
+    asm volatile (
+        \\ mov     r0,#0
+        \\ mov     r1,#0
+        \\ mov     r2,#0
+        \\ mov     r3,#0
+        \\ mov     r4,#0
+        \\ mov     r5,#0
+        \\ mov     r6,#0
+        \\ mov     r7,#0
+        \\ mov     r8,#0
+        \\ mov     r9,#0
+        \\ mov     r10,#0
+        \\ mov     r11,#0
+        \\ mov     r12,#0
+    );
+
     zrtMain();
 }

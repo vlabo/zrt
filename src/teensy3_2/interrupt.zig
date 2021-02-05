@@ -20,9 +20,9 @@ pub fn trigger_pendsv() void {
     cpu.SystemControl.ICSR = 0x10000000;
 }
 
-extern fn xPortPendSVHandler() callconv(.C) void;
-extern fn xPortSysTickHandler() callconv(.C) void;
-extern fn vPortSVCHandler() callconv(.C) void;
+// extern fn xPortPendSVHandler() callconv(.C) void;
+// extern fn xPortSysTickHandler() callconv(.C) void;
+// extern fn vPortSVCHandler() callconv(.C) void;
 
 extern fn USBOTG_IRQHandler() callconv(.C) void;
 
@@ -38,11 +38,11 @@ pub const isr_memmanage_fault: fn () callconv(.C) void = isr_panic;
 pub const isr_bus_fault: fn () callconv(.C) void = isr_panic;
 pub const isr_usage_fault: fn () callconv(.C) void = isr_panic;
 
-pub const isr_svcall: fn () callconv(.C) void = vPortSVCHandler;
+pub const isr_svcall: fn () callconv(.C) void = isr_ignore;
 pub const isr_debug_monitor: fn () callconv(.C) void = isr_ignore;
 
-pub const isr_pendablesrvreq: fn () callconv(.C) void = xPortPendSVHandler;
-pub const isr_systick: fn () callconv(.C) void = xPortSysTickHandler;
+pub const isr_pendablesrvreq: fn () callconv(.C) void = isr_ignore;
+pub const isr_systick: fn () callconv(.C) void = isr_ignore;
 pub const isr_dma_ch0_complete: fn () callconv(.C) void = isr_ignore;
 pub const isr_dma_ch1_complete: fn () callconv(.C) void = isr_ignore;
 pub const isr_dma_ch2_complete: fn () callconv(.C) void = isr_ignore;
