@@ -11,7 +11,9 @@ const c = @cImport({
 });
 
 pub fn main() void {
-    interrupts.disable();
+    var led = gpio.Output.new(13);
+    led.set_high();
+    // interrupts.disable();
+    // interrupts.enable();
     c.usb_init();
-    interrupts.enable();
 }

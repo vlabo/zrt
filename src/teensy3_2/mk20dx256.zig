@@ -9,7 +9,6 @@ pub const WDOG_UNLOCK_SEQ1 = 0xC520;
 pub const WDOG_STCTRLH_ALLOWUPDATE_MASK = 0x10;
 pub const WDOG_STCTRLH_WDOGEN_MASK = 0x01;
 
-
 pub const PMC_REGSC_BGBE_MASK = 0x1;
 pub const PMC_REGSC_BGBE_SHIFT = 0;
 pub const PMC_REGSC_REGONS_MASK = 0x4;
@@ -626,6 +625,228 @@ pub const SCB_ICSR_PENDSVCLR_SHIFT = 27;
 pub const SCB_ICSR_PENDSVSET_MASK = 0x10000000;
 pub const SCB_ICSR_PENDSVSET_SHIFT = 28;
 
+// USB Register Masks
+// PERID Bit Fields
+pub const USB_PERID_ID_MASK = 0x3F;
+pub const USB_PERID_ID_SHIFT = 0;
+// IDCOMP Bit Fields
+pub const USB_IDCOMP_NID_MASK = 0x3F;
+pub const USB_IDCOMP_NID_SHIFT = 0;
+// REV Bit Fields
+pub const USB_REV_REV_MASK = 0xFF;
+pub const USB_REV_REV_SHIFT = 0;
+// ADDINFO Bit Fields
+pub const USB_ADDINFO_IEHOST_MASK = 0x1;
+pub const USB_ADDINFO_IEHOST_SHIFT = 0;
+pub const USB_ADDINFO_IRQNUM_MASK = 0xF8;
+pub const USB_ADDINFO_IRQNUM_SHIFT = 3;
+// OTGISTAT Bit Fields
+pub const USB_OTGISTAT_AVBUSCHG_MASK = 0x1;
+pub const USB_OTGISTAT_AVBUSCHG_SHIFT = 0;
+pub const USB_OTGISTAT_B_SESS_CHG_MASK = 0x4;
+pub const USB_OTGISTAT_B_SESS_CHG_SHIFT = 2;
+pub const USB_OTGISTAT_SESSVLDCHG_MASK = 0x8;
+pub const USB_OTGISTAT_SESSVLDCHG_SHIFT = 3;
+pub const USB_OTGISTAT_LINE_STATE_CHG_MASK = 0x20;
+pub const USB_OTGISTAT_LINE_STATE_CHG_SHIFT = 5;
+pub const USB_OTGISTAT_ONEMSEC_MASK = 0x40;
+pub const USB_OTGISTAT_ONEMSEC_SHIFT = 6;
+pub const USB_OTGISTAT_IDCHG_MASK = 0x80;
+pub const USB_OTGISTAT_IDCHG_SHIFT = 7;
+// OTGICR Bit Fields
+pub const USB_OTGICR_AVBUSEN_MASK = 0x1;
+pub const USB_OTGICR_AVBUSEN_SHIFT = 0;
+pub const USB_OTGICR_BSESSEN_MASK = 0x4;
+pub const USB_OTGICR_BSESSEN_SHIFT = 2;
+pub const USB_OTGICR_SESSVLDEN_MASK = 0x8;
+pub const USB_OTGICR_SESSVLDEN_SHIFT = 3;
+pub const USB_OTGICR_LINESTATEEN_MASK = 0x20;
+pub const USB_OTGICR_LINESTATEEN_SHIFT = 5;
+pub const USB_OTGICR_ONEMSECEN_MASK = 0x40;
+pub const USB_OTGICR_ONEMSECEN_SHIFT = 6;
+pub const USB_OTGICR_IDEN_MASK = 0x80;
+pub const USB_OTGICR_IDEN_SHIFT = 7;
+// OTGSTAT Bit Fields
+pub const USB_OTGSTAT_AVBUSVLD_MASK = 0x1;
+pub const USB_OTGSTAT_AVBUSVLD_SHIFT = 0;
+pub const USB_OTGSTAT_BSESSEND_MASK = 0x4;
+pub const USB_OTGSTAT_BSESSEND_SHIFT = 2;
+pub const USB_OTGSTAT_SESS_VLD_MASK = 0x8;
+pub const USB_OTGSTAT_SESS_VLD_SHIFT = 3;
+pub const USB_OTGSTAT_LINESTATESTABLE_MASK = 0x20;
+pub const USB_OTGSTAT_LINESTATESTABLE_SHIFT = 5;
+pub const USB_OTGSTAT_ONEMSECEN_MASK = 0x40;
+pub const USB_OTGSTAT_ONEMSECEN_SHIFT = 6;
+pub const USB_OTGSTAT_ID_MASK = 0x80;
+pub const USB_OTGSTAT_ID_SHIFT = 7;
+// OTGCTL Bit Fields
+pub const USB_OTGCTL_OTGEN_MASK = 0x4;
+pub const USB_OTGCTL_OTGEN_SHIFT = 2;
+pub const USB_OTGCTL_DMLOW_MASK = 0x10;
+pub const USB_OTGCTL_DMLOW_SHIFT = 4;
+pub const USB_OTGCTL_DPLOW_MASK = 0x20;
+pub const USB_OTGCTL_DPLOW_SHIFT = 5;
+pub const USB_OTGCTL_DPHIGH_MASK = 0x80;
+pub const USB_OTGCTL_DPHIGH_SHIFT = 7;
+// ISTAT Bit Fields
+pub const USB_ISTAT_USBRST_MASK = 0x1;
+pub const USB_ISTAT_USBRST_SHIFT = 0;
+pub const USB_ISTAT_ERROR_MASK = 0x2;
+pub const USB_ISTAT_ERROR_SHIFT = 1;
+pub const USB_ISTAT_SOFTOK_MASK = 0x4;
+pub const USB_ISTAT_SOFTOK_SHIFT = 2;
+pub const USB_ISTAT_TOKDNE_MASK = 0x8;
+pub const USB_ISTAT_TOKDNE_SHIFT = 3;
+pub const USB_ISTAT_SLEEP_MASK = 0x10;
+pub const USB_ISTAT_SLEEP_SHIFT = 4;
+pub const USB_ISTAT_RESUME_MASK = 0x20;
+pub const USB_ISTAT_RESUME_SHIFT = 5;
+pub const USB_ISTAT_ATTACH_MASK = 0x40;
+pub const USB_ISTAT_ATTACH_SHIFT = 6;
+pub const USB_ISTAT_STALL_MASK = 0x80;
+pub const USB_ISTAT_STALL_SHIFT = 7;
+// INTEN Bit Fields
+pub const USB_INTEN_USBRSTEN_MASK = 0x1;
+pub const USB_INTEN_USBRSTEN_SHIFT = 0;
+pub const USB_INTEN_ERROREN_MASK = 0x2;
+pub const USB_INTEN_ERROREN_SHIFT = 1;
+pub const USB_INTEN_SOFTOKEN_MASK = 0x4;
+pub const USB_INTEN_SOFTOKEN_SHIFT = 2;
+pub const USB_INTEN_TOKDNEEN_MASK = 0x8;
+pub const USB_INTEN_TOKDNEEN_SHIFT = 3;
+pub const USB_INTEN_SLEEPEN_MASK = 0x10;
+pub const USB_INTEN_SLEEPEN_SHIFT = 4;
+pub const USB_INTEN_RESUMEEN_MASK = 0x20;
+pub const USB_INTEN_RESUMEEN_SHIFT = 5;
+pub const USB_INTEN_ATTACHEN_MASK = 0x40;
+pub const USB_INTEN_ATTACHEN_SHIFT = 6;
+pub const USB_INTEN_STALLEN_MASK = 0x80;
+pub const USB_INTEN_STALLEN_SHIFT = 7;
+// ERRSTAT Bit Fields
+pub const USB_ERRSTAT_PIDERR_MASK = 0x1;
+pub const USB_ERRSTAT_PIDERR_SHIFT = 0;
+pub const USB_ERRSTAT_CRC5EOF_MASK = 0x2;
+pub const USB_ERRSTAT_CRC5EOF_SHIFT = 1;
+pub const USB_ERRSTAT_CRC16_MASK = 0x4;
+pub const USB_ERRSTAT_CRC16_SHIFT = 2;
+pub const USB_ERRSTAT_DFN8_MASK = 0x8;
+pub const USB_ERRSTAT_DFN8_SHIFT = 3;
+pub const USB_ERRSTAT_BTOERR_MASK = 0x10;
+pub const USB_ERRSTAT_BTOERR_SHIFT = 4;
+pub const USB_ERRSTAT_DMAERR_MASK = 0x20;
+pub const USB_ERRSTAT_DMAERR_SHIFT = 5;
+pub const USB_ERRSTAT_BTSERR_MASK = 0x80;
+pub const USB_ERRSTAT_BTSERR_SHIFT = 7;
+// ERREN Bit Fields
+pub const USB_ERREN_PIDERREN_MASK = 0x1;
+pub const USB_ERREN_PIDERREN_SHIFT = 0;
+pub const USB_ERREN_CRC5EOFEN_MASK = 0x2;
+pub const USB_ERREN_CRC5EOFEN_SHIFT = 1;
+pub const USB_ERREN_CRC16EN_MASK = 0x4;
+pub const USB_ERREN_CRC16EN_SHIFT = 2;
+pub const USB_ERREN_DFN8EN_MASK = 0x8;
+pub const USB_ERREN_DFN8EN_SHIFT = 3;
+pub const USB_ERREN_BTOERREN_MASK = 0x10;
+pub const USB_ERREN_BTOERREN_SHIFT = 4;
+pub const USB_ERREN_DMAERREN_MASK = 0x20;
+pub const USB_ERREN_DMAERREN_SHIFT = 5;
+pub const USB_ERREN_BTSERREN_MASK = 0x80;
+pub const USB_ERREN_BTSERREN_SHIFT = 7;
+// STAT Bit Fields
+pub const USB_STAT_ODD_MASK = 0x4;
+pub const USB_STAT_ODD_SHIFT = 2;
+pub const USB_STAT_TX_MASK = 0x8;
+pub const USB_STAT_TX_SHIFT = 3;
+pub const USB_STAT_ENDP_MASK = 0xF0;
+pub const USB_STAT_ENDP_SHIFT = 4;
+// CTL Bit Fields
+pub const USB_CTL_USBENSOFEN_MASK = 0x1;
+pub const USB_CTL_USBENSOFEN_SHIFT = 0;
+pub const USB_CTL_ODDRST_MASK = 0x2;
+pub const USB_CTL_ODDRST_SHIFT = 1;
+pub const USB_CTL_RESUME_MASK = 0x4;
+pub const USB_CTL_RESUME_SHIFT = 2;
+pub const USB_CTL_HOSTMODEEN_MASK = 0x8;
+pub const USB_CTL_HOSTMODEEN_SHIFT = 3;
+pub const USB_CTL_RESET_MASK = 0x10;
+pub const USB_CTL_RESET_SHIFT = 4;
+pub const USB_CTL_TXSUSPENDTOKENBUSY_MASK = 0x20;
+pub const USB_CTL_TXSUSPENDTOKENBUSY_SHIFT = 5;
+pub const USB_CTL_SE0_MASK = 0x40;
+pub const USB_CTL_SE0_SHIFT = 6;
+pub const USB_CTL_JSTATE_MASK = 0x80;
+pub const USB_CTL_JSTATE_SHIFT = 7;
+// ADDR Bit Fields
+pub const USB_ADDR_ADDR_MASK = 0x7F;
+pub const USB_ADDR_ADDR_SHIFT = 0;
+pub const USB_ADDR_LSEN_MASK = 0x80;
+pub const USB_ADDR_LSEN_SHIFT = 7;
+// BDTPAGE1 Bit Fields
+pub const USB_BDTPAGE1_BDTBA_MASK = 0xFE;
+pub const USB_BDTPAGE1_BDTBA_SHIFT = 1;
+// FRMNUML Bit Fields
+pub const USB_FRMNUML_FRM_MASK = 0xFF;
+pub const USB_FRMNUML_FRM_SHIFT = 0;
+// FRMNUMH Bit Fields
+pub const USB_FRMNUMH_FRM_MASK = 0x7;
+pub const USB_FRMNUMH_FRM_SHIFT = 0;
+// TOKEN Bit Fields
+pub const USB_TOKEN_TOKENENDPT_MASK = 0xF;
+pub const USB_TOKEN_TOKENENDPT_SHIFT = 0;
+pub const USB_TOKEN_TOKENPID_MASK = 0xF0;
+pub const USB_TOKEN_TOKENPID_SHIFT = 4;
+// SOFTHLD Bit Fields
+pub const USB_SOFTHLD_CNT_MASK = 0xFF;
+pub const USB_SOFTHLD_CNT_SHIFT = 0;
+// BDTPAGE2 Bit Fields
+pub const USB_BDTPAGE2_BDTBA_MASK = 0xFF;
+pub const USB_BDTPAGE2_BDTBA_SHIFT = 0;
+// BDTPAGE3 Bit Fields
+pub const USB_BDTPAGE3_BDTBA_MASK = 0xFF;
+pub const USB_BDTPAGE3_BDTBA_SHIFT = 0;
+// ENDPT Bit Fields
+pub const USB_ENDPT_EPHSHK_MASK = 0x1;
+pub const USB_ENDPT_EPHSHK_SHIFT = 0;
+pub const USB_ENDPT_EPSTALL_MASK = 0x2;
+pub const USB_ENDPT_EPSTALL_SHIFT = 1;
+pub const USB_ENDPT_EPTXEN_MASK = 0x4;
+pub const USB_ENDPT_EPTXEN_SHIFT = 2;
+pub const USB_ENDPT_EPRXEN_MASK = 0x8;
+pub const USB_ENDPT_EPRXEN_SHIFT = 3;
+pub const USB_ENDPT_EPCTLDIS_MASK = 0x10;
+pub const USB_ENDPT_EPCTLDIS_SHIFT = 4;
+pub const USB_ENDPT_RETRYDIS_MASK = 0x40;
+pub const USB_ENDPT_RETRYDIS_SHIFT = 6;
+pub const USB_ENDPT_HOSTWOHUB_MASK = 0x80;
+pub const USB_ENDPT_HOSTWOHUB_SHIFT = 7;
+// USBCTRL Bit Fields
+pub const USB_USBCTRL_PDE_MASK = 0x40;
+pub const USB_USBCTRL_PDE_SHIFT = 6;
+pub const USB_USBCTRL_SUSP_MASK = 0x80;
+pub const USB_USBCTRL_SUSP_SHIFT = 7;
+// OBSERVE Bit Fields
+pub const USB_OBSERVE_DMPD_MASK = 0x10;
+pub const USB_OBSERVE_DMPD_SHIFT = 4;
+pub const USB_OBSERVE_DPPD_MASK = 0x40;
+pub const USB_OBSERVE_DPPD_SHIFT = 6;
+pub const USB_OBSERVE_DPPU_MASK = 0x80;
+pub const USB_OBSERVE_DPPU_SHIFT = 7;
+// CONTROL Bit Fields
+pub const USB_CONTROL_DPPULLUPNONOTG_MASK = 0x10;
+pub const USB_CONTROL_DPPULLUPNONOTG_SHIFT = 4;
+// USBTRC0 Bit Fields
+pub const USB_USBTRC0_USB_RESUME_INT_MASK = 0x1;
+pub const USB_USBTRC0_USB_RESUME_INT_SHIFT = 0;
+pub const USB_USBTRC0_SYNC_DET_MASK = 0x2;
+pub const USB_USBTRC0_SYNC_DET_SHIFT = 1;
+pub const USB_USBTRC0_USBRESMEN_MASK = 0x20;
+pub const USB_USBTRC0_USBRESMEN_SHIFT = 5;
+pub const USB_USBTRC0_USBRESET_MASK = 0x80;
+pub const USB_USBTRC0_USBRESET_SHIFT = 7;
+// USBFRMADJUST Bit Fields
+pub const USB_USBFRMADJUST_ADJ_MASK = 0xFF;
+pub const USB_USBFRMADJUST_ADJ_SHIFT = 0;
+
 // SCB - Peripheral register structure
 const SystemControl_MemMap = struct {
     RESERVED_0: [8]u8,
@@ -772,6 +993,67 @@ pub const SysTick_MemMap = struct {
     CALIB: u32, // < SysTick Calibration Value Register, offset: 0xC
 };
 
+// USB - Peripheral register structure
+pub const USB_MemMap = struct {
+    PERID: u8, // < Peripheral ID Register, offset: 0x0
+    RESERVED_0: [3]u8,
+    IDCOMP: u8, // < Peripheral ID Complement Register, offset: 0x4
+    RESERVED_1: [3]u8,
+    REV: u8, // < Peripheral Revision Register, offset: 0x8
+    RESERVED_2: [3]u8,
+    ADDINFO: u8, // < Peripheral Additional Info Register, offset: 0xC
+    RESERVED_3: [3]u8,
+    OTGISTAT: u8, // < OTG Interrupt Status Register, offset: 0x10
+    RESERVED_4: [3]u8,
+    OTGICR: u8, // < OTG Interrupt Control Register, offset: 0x14
+    RESERVED_5: [3]u8,
+    OTGSTAT: u8, // < OTG Status Register, offset: 0x18
+    RESERVED_6: [3]u8,
+    OTGCTL: u8, // < OTG Control Register, offset: 0x1C
+    RESERVED_7: [99]u8,
+    ISTAT: u8, // < Interrupt Status Register, offset: 0x80
+    RESERVED_8: [3]u8,
+    INTEN: u8, // < Interrupt Enable Register, offset: 0x84
+    RESERVED_9: [3]u8,
+    ERRSTAT: u8, // < Error Interrupt Status Register, offset: 0x88
+    RESERVED_10: [3]u8,
+    ERREN: u8, // < Error Interrupt Enable Register, offset: 0x8C
+    RESERVED_11: [3]u8,
+    STAT: u8, // < Status Register, offset: 0x90
+    RESERVED_12: [3]u8,
+    CTL: u8, // < Control Register, offset: 0x94
+    RESERVED_13: [3]u8,
+    ADDR: u8, // < Address Register, offset: 0x98
+    RESERVED_14: [3]u8,
+    BDTPAGE1: u8, // < BDT Page Register 1, offset: 0x9C
+    RESERVED_15: [3]u8,
+    FRMNUML: u8, // < Frame Number Register Low, offset: 0xA0
+    RESERVED_16: [3]u8,
+    FRMNUMH: u8, // < Frame Number Register High, offset: 0xA4
+    RESERVED_17: [3]u8,
+    TOKEN: u8, // < Token Register, offset: 0xA8
+    RESERVED_18: [3]u8,
+    SOFTHLD: u8, // < SOF Threshold Register, offset: 0xAC
+    RESERVED_19: [3]u8,
+    BDTPAGE2: u8, // < BDT Page Register 2, offset: 0xB0
+    RESERVED_20: [3]u8,
+    BDTPAGE3: u8, // < BDT Page Register 3, offset: 0xB4
+    RESERVED_21: [11]u8,
+    ENDPOINT: [16]struct { // offset: 0xC0, array step: 0x4
+        ENDPT: u8, // < Endpoint Control Register, array offset: 0xC0, array step: 0x4
+        RESERVED_0: [3]u8,
+    },
+    USBCTRL: u8, // < USB Control Register, offset: 0x100
+    RESERVED_22: [3]u8,
+    OBSERVE: u8, // < USB OTG Observe Register, offset: 0x104
+    RESERVED_23: [3]u8,
+    CONTROL: u8, // < USB OTG Control Register, offset: 0x108
+    RESERVED_24: [3]u8,
+    USBTRC0: u8, // < USB Transceiver Control Register 0, offset: 0x10C
+    RESERVED_25: [7]u8,
+    USBFRMADJUST: u8, // < Frame Adjust Register, offset: 0x114
+};
+
 pub var PortA align(32) = @intToPtr(*volatile Port, 0x40049000);
 pub var PortB align(32) = @intToPtr(*volatile Port, 0x4004A000);
 pub var PortC align(32) = @intToPtr(*volatile Port, 0x4004B000);
@@ -791,6 +1073,8 @@ pub var Uart2 = @intToPtr(*volatile UartMemMap, 0x4006C000);
 pub var OscillatorControl = @intToPtr(*volatile u8, 0x40065000);
 pub var ClockGenerator = @intToPtr(*volatile MultiPurposeClockGenerator, 0x40064000);
 pub var RegolatorStatusAndControl = @intToPtr(*volatile u8, 0x4007D002); // PMC_REGSC
+
+pub var Usb = @intToPtr(*volatile USB_MemMap, 0x40072000);
 
 pub var Power = @intToPtr(*volatile PowerStruct, 0x4007E000);
 
@@ -964,6 +1248,66 @@ pub fn systick_calib_tenms(comptime x: comptime_int) comptime_int {
 
 fn left_shift_and_mask(comptime x: comptime_int, comptime shift: u5, comptime mask: u32) comptime_int {
     return (x << shift) & mask;
+}
+
+fn usb_perid_id(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_PERID_ID_SHIFT, USB_PERID_ID_MASK);
+}
+
+fn usb_idcomp_nid(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_IDCOMP_NID_SHIFT, USB_IDCOMP_NID_MASK);
+}
+
+fn usb_rev_rev(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_REV_REV_SHIFT, USB_REV_REV_MASK);
+}
+
+fn usb_addinfo_irqnum(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_ADDINFO_IRQNUM_SHIFT, USB_ADDINFO_IRQNUM_MASK);
+}
+
+fn usb_stat_endp(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_STAT_ENDP_SHIFT, USB_STAT_ENDP_MASK);
+}
+
+fn usb_addr_addr(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_ADDR_ADDR_SHIFT, USB_ADDR_ADDR_MASK);
+}
+
+fn usb_bdtpage1_bdtba(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_BDTPAGE1_BDTBA_SHIFT, USB_BDTPAGE1_BDTBA_MASK);
+}
+
+fn usb_frmnuml_frm(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_FRMNUML_FRM_SHIFT, USB_FRMNUML_FRM_MASK);
+}
+
+fn usb_frmnumh_frm(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_FRMNUMH_FRM_SHIFT, USB_FRMNUMH_FRM_MASK);
+}
+
+fn usb_token_tokenendpt(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_TOKEN_TOKENENDPT_SHIFT, USB_TOKEN_TOKENENDPT_MASK);
+}
+
+fn usb_token_tokenpid(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_TOKEN_TOKENPID_SHIFT, USB_TOKEN_TOKENPID_MASK);
+}
+
+fn usb_softhld_cnt(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_SOFTHLD_CNT_SHIFT, USB_SOFTHLD_CNT_MASK);
+}
+
+fn usb_bdtpage2_bdtba(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_BDTPAGE2_BDTBA_SHIFT, USB_BDTPAGE2_BDTBA_MASK);
+}
+
+fn usb_bdtpage3_bdtba(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_BDTPAGE3_BDTBA_SHIFT, USB_BDTPAGE3_BDTBA_MASK);
+}
+
+fn usb_usbfrmadjust_adj(comptime x: comptime_int) comptime_int {
+    return left_shift_and_mask(x, USB_USBFRMADJUST_ADJ_SHIFT, USB_USBFRMADJUST_ADJ_MASK);
 }
 
 pub inline fn nop() void {

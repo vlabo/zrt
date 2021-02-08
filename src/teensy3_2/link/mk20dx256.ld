@@ -1,103 +1,161 @@
 /*
- * First off, let's define the regions for flash and RAM.
- * The teensy 3.1/3.2 uses a MK20DX256VLH7 with 256K flash starting at 0
- *
- * The RAM is split into two halfes called SRAM_L and SRAM_U.
- * SRAM_L ends at 0x1fff ffff and SRAM_U starts with 0x2000 0000
- * for most purposes, both blocks can be used as one. However, when in
- * VLLS2 power mode, only SRAM_U is powered.
- *
- * For the 64K of RAM in the MK20DX256VLH7, this translates to a
- * start address of 0x1fff8000
+ *  Teensy31_flash.ld      generic linker script for Teensy 3.1 flash-based projects
  */
 
+
+OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
+OUTPUT_ARCH(arm)
+ENTRY(_start)
+
+/*
+ *  SRAM is split into two contiguous blocks of equal size.  SRAM_L
+ *  is the lower half of RAM and SRAM_H is the higher half.
+ *
+ *  For devices with 64K, the low 32K will appear 0x1fff8000 to 0x2000000
+ *  and the high 32K will appear 0x20000000 to 0x20007fff.
+ */
 MEMORY
 {
-  FLASH (rx)  : ORIGIN = 0x00000000, LENGTH = 256K
-  RAM   (rwx) : ORIGIN = 0x1FFF8000, LENGTH =  64K
+    sram (W!RX) : ORIGIN = 0x1fff8000, LENGTH = 64K
+    flash (RX)  : ORIGIN = 0x00000000, LENGTH = 256K
 }
+
+/* Define the top our stack at the end of SRAM */
+TOTAL_RESERVED_STACK = 8196;		/* note that printf() and other stdio routines use 4K+ from stack! */
+_top_stack = (0x1fff8000+64K);	    /* calc top of stack */
+
+/*
+ *  Define the amount of heap space to reserve.
+ */
+TOTAL_RESERVED_HEAP = 0;
+
+
+/* EXTERN(__interrupt_vector_table); */
 
 SECTIONS
 {
-  .text : {
-    /* The .text section is placed at the start in flash, which starts at address 0 */
-    . = 0;
+	.text :
+	{
+		CREATE_OBJECT_SYMBOLS
+		/* Insert the interrupt vector table first */
+		/* __interrupt_vector_table = .; */
+		KEEP(*(.vectors))
 
-    /* First up is the interrupt vectors. The first two entries are even more special,
-     * as they old the initial stack pointer and the initial program counter.
-     * Mark this section KEEP to prevent it being garbage collected.
-     * The syntax *(.foo) means take the .foo sections from all files (*). */
-    KEEP(*(.vectors))
+		/* Startup assembly */
+		*(.startup)
 
-    /* We have some space between the end of the vectors and the flash config,
-     * so let's squeeze in some startup code. If it gets too long, we'll have
-     * to put it elsewhere. */
-    *(.startup*)
+		/* Rest of the code (C) */
+		*(.text)
+		*(.text.*)
+		*(.glue_7)
+		*(.glue_7t)
 
-    /* The flashconfig has to appear at 0x400, so we'll move there by explicitly
-     * assigning the location counter (.). Since the location counter can only
-     * move forward, this also serves as a protection from .startup spilling over
-     * into .flashconfig.
-     *
-     * WARNING: Be very careful with the flashconfig, as wrong values can lead
-     * to various degrees of bricking your teensy */
-    . = 0x400;
-    KEEP(*(.flashconfig*))
+/*  Added following section for holding initializers for variables
+ *  that will be accessed from RAM; see also the AT(_end_data_flash)
+ *  usage below.
+ *
+ *  The _data_size value will be used in the startup code to step through
+ *  the image of data in flash and copy it to RAM.
+ */
+		. = ALIGN(4);
+		*(.rodata)
+		*(.rodata*)
+		*(.init)					/* added */
+		*(.fini)					/* added */
+		. = ALIGN(4);
+		_end_data_flash = .;
+	} >flash
 
-    /* Now let's load all the code */
-    *(.text*)
+/*
+ *  ------------------- Start of SRAM sections ---------------
+ */
 
-    /* And read-only data */
-    *(.rodata*)
-  } > FLASH = 0xFF
-
-  .ARM.exidx : {
-    __exidx_start = .;
-    *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-    __exidx_end = .;
-  } >FLASH
-
-  /* This is the end of the data that will remain in flash. We need to
-   * keep this for later for any sections that are loaded in flash but
-   * need to be relocated to RAM */
-  . = ALIGN(4);
-  _etext = .;
+/*
+ *  If moving vectors from flash to RAM, declare a reserved area for
+ *  the RAM vector table.  This section should appear first, so it gets
+ *  assigned to the first available SRAM address.  Due to requirements
+ *  of the NVIC subsystem, this address MUST be on a 1024-byte
+ *  boundary.
+ */
+	.RAMVectorTable :
+	{
+		*(.RAMVectorTable)
+	}
+	. = ALIGN(4);
 
 
-  /* Data contains all the (mutable) variables with predefined data.
-   * Therefore, we need to put it in flash but the code should refer
-   * to addresses in RAM.
-   * AT (_etext) places the "payload" after everything we put in flash
-   * so far, but > RAM puts this section in RAM for linking.
-   *
-   * This means that early during the boot, we have to copy this from
-   * flash to ram at the provided locations. We therefore need to 
-   * save the start and end (_sdata, _edata) for the memcopy. 
-   *
-   * We also align start and end to 4 byte = 32bit boundaries so we can
-   * simply copy whole registers/int32 instead of byte per byte */
-  .data : AT (_etext) {
-    . = ALIGN(4);
-    _sdata = .;
-    *(.data*)
-    . = ALIGN(4);
-    _edata = .;
-  } > RAM
+  /*  From generic.ld, supplied by CodeSourcery  */
+  /* .ARM.exidx is sorted, so has to go in its own output section.  */
+	PROVIDE_HIDDEN (__exidx_start = .);
+	.ARM.exidx :
+	{
+		*(.ARM.exidx* .gnu.linkonce.armexidx.*)
+	} >flash
+	PROVIDE_HIDDEN (__exidx_end = .);
 
-  /* The .bss section needs to be zeroed out, so it's similar to
-   * .data in that we need to remember start and end and make it easy
-   * to zero in int32 sizes instead of byte per byte. We however
-   * don't need to put this in flash */
-  .bss : {
-    . = ALIGN(4);
-    _sbss = .;
-    *(.bss*)
-    *(COMMON)
-    . = ALIGN(4);
-    _ebss = .;
-  } > RAM
+
+/*	.data : AT (_end_data_flash)   */
+	.data :
+	{
+		_start_data_flash = LOADADDR(.data);
+		_start_data = .;
+		*(.data)
+		*(.data.*)
+		*(.shdata)
+		_end_data = .;
+	} >sram  AT>flash
+	. = ALIGN(4);
+	_data_size = _end_data - _start_data;
+
+	.noinit :
+	{
+		*(.noinit)
+		*(.noinit.*)
+	} >sram
+
+	_sbss = .;
+	.bss :
+	{
+		*(.bss)
+		*(.bss.*)
+		*(COMMON)
+	} >sram
+	. = ALIGN(4);
+	PROVIDE(_ebss = .);				/* make value of _end_bss available externally */
+
+	/* Stack can grow down to here, right after data and bss sections in
+	 * SRAM */
+	_start_stack = _top_stack - TOTAL_RESERVED_STACK;
+	_top_stack = _top_stack;			/* just to make the map file easier to read */
+
+
+/*
+ *  If you want a heap, declare it here.
+ */
+/*
+  	.heap :
+ 	{
+ 		PROVIDE(_startHeap = .);
+ 		*(.heap)
+ 		. += TOTAL_RESERVED_HEAP;
+ 		. = ALIGN(4);
+ 		PROVIDE(_endHeap = .);
+ 	} > ahbsram1
+*/
+
+
+
+	/* Linker wants .eh_frame section defined because of gcc 4.4.X bug,
+	 * just discard it here. */
+	/DISCARD/ :
+	{
+		*(.eh_*)
+	}
 
   /* Create a symbol for the end of the RAM as we will put the stack there */
-  _eram = ORIGIN(RAM) + LENGTH(RAM);
+  _eram = ORIGIN(sram) + LENGTH(sram);
 }
+
+_end = .;
+PROVIDE(end = .);
 
